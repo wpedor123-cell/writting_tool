@@ -656,6 +656,7 @@
     let currentPromptIndex = loadIndex(STORAGE_KEYS.promptIndex, 0);
     let currentReminderIndex = loadIndex(STORAGE_KEYS.reminderIndex, 0);
     let editingArticleNoteId = null;
+    let editingEntryId = null;
 
     function exportData() {
       const data = {
@@ -938,6 +939,48 @@
       setStatus(value ? '已更新文章備註。' : '已清除文章備註。');
     }
 
+    function startEntryEdit(id) {
+      editingEntryId = id;
+      renderEntries();
+    }
+
+    function cancelEntryEdit() {
+      editingEntryId = null;
+      renderEntries();
+    }
+
+    function updateEntry(id) {
+      const title = document.getElementById(`editTitle-${id}`).value.trim();
+      const category = document.getElementById(`editCategory-${id}`).value;
+      const content = document.getElementById(`editContent-${id}`).value.trim();
+      const mood = document.getElementById(`editMood-${id}`).value.trim();
+
+      if (!title && !content) {
+        setStatus('標題或內容不能同時為空。', true);
+        return;
+      }
+
+      entries = entries.map(entry => {
+        if (entry.id !== id) return entry;
+        const lines = content ? content.split(/\r?\n/) : [];
+        const firstLine = lines.length ? lines[0].slice(0, 18) : '';
+        const finalTitle = title || firstLine || '一句靈感';
+        
+        return {
+          ...entry,
+          title: finalTitle,
+          category,
+          content,
+          mood
+        };
+      });
+
+      saveEntries();
+      editingEntryId = null;
+      renderAll();
+      setStatus('靈感已成功更新。');
+    }
+
     function deleteEntry(id) {
       entries = entries.filter(entry => entry.id !== id);
       if (editingArticleNoteId === id) editingArticleNoteId = null;
@@ -1044,39 +1087,76 @@
         return;
       }
 
-      els.entryList.innerHTML = list.map(entry => `
-        <article class="entry">
-          <div class="entry-head">
-            <div class="entry-title">${escapeHtml(entry.title)}</div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-              ${entry.favorite ? '<div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>' : ''}
-              ${entry.category ? `<div class="badge">${escapeHtml(entry.category)}</div>` : ''}
-              ${entry.isArticle ? '<div class="badge" style="background:#e7f4ea; color:#4f7a59;">已成文章</div>' : ''}
-            </div>
-          </div>
-          <div class="entry-meta">
-            <div class="badge">${formatDateTime(entry.createdAt)}</div>
-            ${entry.mood ? `<div class="badge">心情：${escapeHtml(entry.mood)}</div>` : ''}
-          </div>
-          ${entry.content ? `<div class="entry-content">${escapeHtml(entry.content)}</div>` : ''}
-          ${entry.isArticle && entry.articleNote && editingArticleNoteId !== entry.id ? `<div class="article-note">文章備註：${linkify(escapeHtml(entry.articleNote))}</div>` : ''}
-          ${entry.isArticle && editingArticleNoteId === entry.id ? `
-            <div class="article-note-editor">
-              <input id="articleNoteInput-${entry.id}" type="text" value="${escapeHtml(entry.articleNote)}" placeholder="輸入這則靈感後來變成哪篇文章" />
-              <div class="toolbar" style="margin-top:0;">
-                <button type="button" class="btn-primary" data-action="save-note" data-id="${entry.id}">儲存備註</button>
-                <button type="button" class="btn-light" data-action="cancel-note" data-id="${entry.id}">取消</button>
+      els.entryList.innerHTML = list.map(entry => {
+        if (editingEntryId === entry.id) {
+          return `
+            <article class="entry">
+              <div class="entry-editor">
+                <label style="font-size:13px; color:var(--subtext); display:block; margin-bottom:4px;">標題</label>
+                <input id="editTitle-${entry.id}" type="text" value="${escapeHtml(entry.title)}" placeholder="標題" style="margin-bottom:10px;" />
+                
+                <label style="font-size:13px; color:var(--subtext); display:block; margin-bottom:4px;">類型</label>
+                <select id="editCategory-${entry.id}" style="margin-bottom:10px;">
+                  <option value="" ${entry.category === '' ? 'selected' : ''}></option>
+                  <option value="詩" ${entry.category === '詩' ? 'selected' : ''}>詩</option>
+                  <option value="散文" ${entry.category === '散文' ? 'selected' : ''}>散文</option>
+                  <option value="小說" ${entry.category === '小說' ? 'selected' : ''}>小說</option>
+                  <option value="夢境" ${entry.category === '夢境' ? 'selected' : ''}>夢境</option>
+                  <option value="想法" ${entry.category === '想法' ? 'selected' : ''}>想法</option>
+                  <option value="角色" ${entry.category === '角色' ? 'selected' : ''}>角色</option>
+                  <option value="生活觀察" ${entry.category === '生活觀察' ? 'selected' : ''}>生活觀察</option>
+                </select>
+
+                <label style="font-size:13px; color:var(--subtext); display:block; margin-bottom:4px;">內容</label>
+                <textarea id="editContent-${entry.id}" placeholder="內容" style="margin-bottom:10px; min-height:120px;">${escapeHtml(entry.content)}</textarea>
+                
+                <label style="font-size:13px; color:var(--subtext); display:block; margin-bottom:4px;">心情</label>
+                <input id="editMood-${entry.id}" type="text" value="${escapeHtml(entry.mood)}" placeholder="心情" style="margin-bottom:12px;" />
+                
+                <div class="toolbar" style="margin-top:0;">
+                  <button type="button" class="btn-primary" data-action="save-edit" data-id="${entry.id}">儲存修改</button>
+                  <button type="button" class="btn-light" data-action="cancel-edit" data-id="${entry.id}">取消</button>
+                </div>
+              </div>
+            </article>
+          `;
+        }
+
+        return `
+          <article class="entry">
+            <div class="entry-head">
+              <div class="entry-title">${escapeHtml(entry.title)}</div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                ${entry.favorite ? '<div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>' : ''}
+                ${entry.category ? `<div class="badge">${escapeHtml(entry.category)}</div>` : ''}
+                ${entry.isArticle ? '<div class="badge" style="background:#e7f4ea; color:#4f7a59;">已成文章</div>' : ''}
               </div>
             </div>
-          ` : ''}
-          <div class="entry-footer">
-            <button type="button" class="btn-light" data-action="toggle-fav" data-id="${entry.id}">${entry.favorite ? '取消收藏' : '收藏'}</button>
-            <button type="button" class="btn-success" data-action="toggle-article" data-id="${entry.id}">${entry.isArticle ? '取消文章' : '標記成文章'}</button>
-            ${entry.isArticle ? `<button type="button" class="btn-light" data-action="edit-note" data-id="${entry.id}">${entry.articleNote ? '修改文章備註' : '寫文章備註'}</button>` : ''}
-            <button type="button" class="btn-danger" data-action="delete-entry" data-id="${entry.id}">刪除</button>
-          </div>
-        </article>
-      `).join('');
+            <div class="entry-meta">
+              <div class="badge">${formatDateTime(entry.createdAt)}</div>
+              ${entry.mood ? `<div class="badge">心情：${escapeHtml(entry.mood)}</div>` : ''}
+            </div>
+            ${entry.content ? `<div class="entry-content">${escapeHtml(entry.content)}</div>` : ''}
+            ${entry.isArticle && entry.articleNote && editingArticleNoteId !== entry.id ? `<div class="article-note">文章備註：${linkify(escapeHtml(entry.articleNote))}</div>` : ''}
+            ${entry.isArticle && editingArticleNoteId === entry.id ? `
+              <div class="article-note-editor">
+                <input id="articleNoteInput-${entry.id}" type="text" value="${escapeHtml(entry.articleNote)}" placeholder="輸入這則靈感後來變成哪篇文章" />
+                <div class="toolbar" style="margin-top:0;">
+                  <button type="button" class="btn-primary" data-action="save-note" data-id="${entry.id}">儲存備註</button>
+                  <button type="button" class="btn-light" data-action="cancel-note" data-id="${entry.id}">取消</button>
+                </div>
+              </div>
+            ` : ''}
+            <div class="entry-footer">
+              <button type="button" class="btn-light" data-action="toggle-fav" data-id="${entry.id}">${entry.favorite ? '取消收藏' : '收藏'}</button>
+              <button type="button" class="btn-success" data-action="toggle-article" data-id="${entry.id}">${entry.isArticle ? '取消文章' : '標記成文章'}</button>
+              <button type="button" class="btn-light" data-action="edit-entry" data-id="${entry.id}">編輯</button>
+              ${entry.isArticle ? `<button type="button" class="btn-light" data-action="edit-note" data-id="${entry.id}">${entry.articleNote ? '修改文章備註' : '寫文章備註'}</button>` : ''}
+              <button type="button" class="btn-danger" data-action="delete-entry" data-id="${entry.id}">刪除</button>
+            </div>
+          </article>
+        `;
+      }).join('');
     }
 
     function renderSentences() {
@@ -1199,6 +1279,12 @@
         saveArticleNote(id);
       } else if (action === 'cancel-note') {
         cancelArticleNoteEdit();
+      } else if (action === 'edit-entry') {
+        startEntryEdit(id);
+      } else if (action === 'save-edit') {
+        updateEntry(id);
+      } else if (action === 'cancel-edit') {
+        cancelEntryEdit();
       }
     });
 
