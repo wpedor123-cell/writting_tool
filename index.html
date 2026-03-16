@@ -19,57 +19,6 @@
       --radius-md: 16px;
     }
 
-    /* 馬卡龍色系主題 */
-    body.theme-sakura {
-      --primary: #e59da9;
-      --primary-dark: #cc8491;
-      --accent-soft: #fce4e8;
-      --border: #f2e1e4;
-    }
-    body.theme-lavender {
-      --primary: #b09dfa;
-      --primary-dark: #9681e5;
-      --accent-soft: #f0ebff;
-      --border: #e6e0f8;
-    }
-    body.theme-sky {
-      --primary: #8ecae6;
-      --primary-dark: #6fb3d4;
-      --accent-soft: #e1f5fe;
-      --border: #d2eaf5;
-    }
-    body.theme-lemon {
-      --primary: #e9c46a;
-      --primary-dark: #d4ac4a;
-      --accent-soft: #fefae0;
-      --border: #f2ebd1;
-    }
-    body.theme-mint {
-      --primary: #7a9a7c;
-      --primary-dark: #5c7a5f;
-      --accent-soft: #e7f4ea;
-      --border: #dce7dd;
-    }
-
-    .theme-picker {
-      display: flex;
-      gap: 10px;
-      margin-top: 15px;
-    }
-
-    .theme-dot {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      cursor: pointer;
-      border: 2px solid white;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      transition: transform 0.2s;
-    }
-
-    .theme-dot:hover { transform: scale(1.2); }
-    .theme-dot.active { border-color: var(--text); transform: scale(1.1); }
-
     * { box-sizing: border-box; }
 
     body {
@@ -80,8 +29,8 @@
     }
 
     .container {
-      width: min(1180px, calc(100% - 32px));
-      margin: 28px auto 48px;
+      width: 96%;
+      margin: 20px auto 48px;
     }
 
     .hero {
@@ -91,7 +40,7 @@
       padding: 28px;
       box-shadow: var(--shadow);
       display: grid;
-      grid-template-columns: 1.3fr 0.9fr;
+      grid-template-columns: 1fr 0.8fr;
       gap: 20px;
       align-items: center;
     }
@@ -131,12 +80,20 @@
       margin-bottom: 12px;
     }
 
+    /* 瀑布流版面設定 */
     .layout {
       margin-top: 22px;
-      display: grid;
-      grid-template-columns: 1.15fr 0.85fr;
-      gap: 22px;
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
       align-items: start;
+    }
+
+    .layout-col {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 20px;
     }
 
     .panel {
@@ -145,6 +102,7 @@
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow);
       padding: 20px;
+      width: 100%;
     }
 
     .panel h2 {
@@ -237,6 +195,7 @@
 
     .article-note {
       margin-top: 10px;
+      margin-bottom: 14px;
       padding: 12px;
       border: 1px solid #dceadf;
       background: #f6fbf7;
@@ -248,6 +207,7 @@
 
     .article-note-editor {
       margin-top: 10px;
+      margin-bottom: 14px;
       padding: 12px;
       border: 1px solid #dceadf;
       background: #f6fbf7;
@@ -282,14 +242,6 @@
       font-weight: 800;
     }
 
-    .stat .goal-text {
-      font-size: 12px;
-      color: var(--primary-dark);
-      margin-top: 6px;
-      font-weight: 500;
-      line-height: 1.4;
-    }
-
     .prompt-box {
       background: linear-gradient(180deg, #fffaf5, #fff3e6);
       border: 1px solid #f0dcc4;
@@ -318,11 +270,29 @@
       margin-bottom: 14px;
     }
 
-    .entry-list, .sentence-list {
+    .entry-list {
       display: grid;
       gap: 12px;
       margin-top: 12px;
       max-height: 700px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .sentence-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+      max-height: 480px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    #favoriteList {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+      max-height: 540px;
       overflow: auto;
       padding-right: 4px;
     }
@@ -384,6 +354,7 @@
       justify-content: space-between;
       gap: 10px;
       align-items: center;
+      margin-top: 14px;
     }
 
     .empty {
@@ -408,9 +379,21 @@
       margin-top: 20px;
     }
 
+    /* 特定順序定義 */
+    .p-1 { order: 1; }
+    .p-2 { order: 2; }
+    .p-3 { order: 3; }
+    .p-4 { order: 4; }
+    .p-5 { order: 5; }
+    .p-6 { order: 6; }
+    .p-7 { order: 7; }
+
     @media (max-width: 980px) {
-      .hero, .layout {
-        grid-template-columns: 1fr;
+      .layout {
+        flex-direction: column;
+      }
+      .layout-col {
+        display: contents; /* 讓容器「消失」，使子元素受 layout 容器直接排序 */
       }
       .stats {
         grid-template-columns: 1fr 1fr;
@@ -435,13 +418,6 @@
       <div>
         <h1>靈感簿 Inspiration Flow</h1>
         <p>把一瞬間的句子、夢境與畫面留下來。<br>不需要等靈感完整，只要記得它曾經來過。</p>
-        <div class="theme-picker">
-          <div class="theme-dot theme-mint active" data-theme="theme-mint" title="薄荷綠" style="background:#7a9a7c;"></div>
-          <div class="theme-dot theme-sakura" data-theme="theme-sakura" title="櫻花粉" style="background:#e59da9;"></div>
-          <div class="theme-dot theme-lavender" data-theme="theme-lavender" title="薰衣草紫" style="background:#b09dfa;"></div>
-          <div class="theme-dot theme-sky" data-theme="theme-sky" title="天空藍" style="background:#8ecae6;"></div>
-          <div class="theme-dot theme-lemon" data-theme="theme-lemon" title="蜂蜜黃" style="background:#e9c46a;"></div>
-        </div>
       </div>
       <div class="hero-card">
         <div class="hero-tip-title">今日心理與寫作小提醒</div>
@@ -451,37 +427,10 @@
     </section>
 
     <div class="layout">
-      <div>
-        <section class="panel">
-          <h2>創作統計</h2>
-          <div class="stats">
-            <div class="stat">
-              <div class="label">總靈感數</div>
-              <div class="value" id="totalCount">0</div>
-              <div class="goal-text" id="totalGoalInfo"></div>
-            </div>
-            <div class="stat">
-              <div class="label">今天新增</div>
-              <div class="value" id="todayCount">0</div>
-            </div>
-            <div class="stat">
-              <div class="label">句子庫</div>
-              <div class="value" id="sentenceCount">0</div>
-              <div class="goal-text" id="sentenceGoalInfo"></div>
-            </div>
-            <div class="stat">
-              <div class="label">最常類型</div>
-              <div class="value" id="topCategory">—</div>
-            </div>
-          </div>
-          <div class="toolbar" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
-            <button class="btn-light" id="exportBtn" type="button" style="flex:1;">匯出備份 (.txt)</button>
-            <button class="btn-light" id="importBtn" type="button" style="flex:1;">匯入資料</button>
-            <input type="file" id="importInput" style="display:none;" accept=".txt" />
-          </div>
-        </section>
-
-        <section class="panel" style="margin-top:22px;">
+      <!-- 左欄容器：負責存放第 1, 3, 5, 7 個區塊 -->
+      <div class="layout-col">
+        <!-- 1. 快速記錄靈感 -->
+        <section class="panel p-1">
           <h2>快速記錄靈感</h2>
           <div class="sub">今天有什麼想法？一句話也可以。你不需要立刻寫成完整作品。</div>
 
@@ -524,7 +473,8 @@
           <div class="small-note" id="saveStatus">你的資料會自動保存在這台裝置的瀏覽器中。</div>
         </section>
 
-        <section class="panel" style="margin-top:22px;">
+        <!-- 3. 今日寫作提示 -->
+        <section class="panel p-3">
           <h2>今日寫作提示</h2>
           <div class="prompt-box">
             <div class="prompt-text" id="promptText"></div>
@@ -534,15 +484,46 @@
           </div>
         </section>
 
-        <section class="panel" style="margin-top:22px;">
-          <h2>靈感完成區</h2>
-          <div class="sub">這些靈感已經發展成完整作品。</div>
-          <div class="entry-list" id="articleList"></div>
+        <!-- 5. 收藏區 -->
+        <section class="panel p-5">
+          <h2>收藏區</h2>
+          <div class="sub">你標記為重要的靈感與句子。</div>
+          <div class="entry-list" id="favoriteList"></div>
+        </section>
+
+        <!-- 7. 創作統計 -->
+        <section class="panel p-7">
+          <h2>創作統計</h2>
+          <div class="stats">
+            <div class="stat">
+              <div class="label">總靈感數</div>
+              <div class="value" id="totalCount">0</div>
+            </div>
+            <div class="stat">
+              <div class="label">今天新增</div>
+              <div class="value" id="todayCount">0</div>
+            </div>
+            <div class="stat">
+              <div class="label">句子庫</div>
+              <div class="value" id="sentenceCount">0</div>
+            </div>
+            <div class="stat">
+              <div class="label">最常類型</div>
+              <div class="value" id="topCategory">—</div>
+            </div>
+          </div>
+          <div class="toolbar" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
+            <button class="btn-light" id="exportBtn" type="button" style="flex:1;">匯出備份 (.txt)</button>
+            <button class="btn-light" id="importBtn" type="button" style="flex:1;">匯入資料</button>
+            <input type="file" id="importInput" style="display:none;" accept=".txt" />
+          </div>
         </section>
       </div>
 
-      <div>
-        <section class="panel">
+      <!-- 右欄容器：負責存放第 2, 4, 6 個區塊 -->
+      <div class="layout-col">
+        <!-- 2. 句子庫 -->
+        <section class="panel p-2">
           <h2>句子庫</h2>
           <div class="sub">記錄你喜歡或想到的一句話。</div>
           <div class="toolbar">
@@ -553,7 +534,8 @@
           <div class="sentence-list" id="sentenceList"></div>
         </section>
 
-        <section class="panel" style="margin-top:22px;">
+        <!-- 4. 靈感庫 -->
+        <section class="panel p-4">
           <h2>靈感庫</h2>
           <div class="search-row">
             <input id="searchInput" type="text" placeholder="搜尋靈感" />
@@ -571,10 +553,11 @@
           <div class="entry-list" id="entryList"></div>
         </section>
 
-        <section class="panel" style="margin-top:22px;">
-          <h2>收藏區</h2>
-          <div class="sub">你標記為重要的靈感與句子。</div>
-          <div class="entry-list" id="favoriteList"></div>
+        <!-- 6. 靈感完成區 -->
+        <section class="panel p-6">
+          <h2>靈感完成區</h2>
+          <div class="sub">這些靈感已經發展成完整作品。</div>
+          <div class="entry-list" id="articleList"></div>
         </section>
       </div>
     </div>
@@ -587,8 +570,7 @@
       entries: 'writing_inspiration_entries_v1',
       sentences: 'writing_inspiration_sentences_v1',
       reminderIndex: 'writing_inspiration_reminder_index_v1',
-      promptIndex: 'writing_inspiration_prompt_index_v1',
-      theme: 'writing_inspiration_theme_v1'
+      promptIndex: 'writing_inspiration_prompt_index_v1'
     };
 
     const prompts = [
@@ -613,7 +595,7 @@
       '你記下的不是零碎，而是未來作品的種子。',
       '有時候，一句話就是整篇作品最早的心跳。',
       '不用急著證明自己會寫，先相信自己有感受。',
-      '創作不是每次都要盛大，有時只是一個安靜的發現。',
+      '創作不是每次都要盛大，有時只是一個安靜加的發現。',
       '當你願意看見細節，故事就會自己靠近你。',
       '有些句子只是路過你的腦海，先留下來再說。',
       '不要急著判斷好不好，先把它寫下來。',
@@ -655,8 +637,6 @@
       totalCount: document.getElementById('totalCount'),
       todayCount: document.getElementById('todayCount'),
       sentenceCount: document.getElementById('sentenceCount'),
-      totalGoalInfo: document.getElementById('totalGoalInfo'),
-      sentenceGoalInfo: document.getElementById('sentenceGoalInfo'),
       topCategory: document.getElementById('topCategory'),
       promptText: document.getElementById('promptText'),
       newPromptBtn: document.getElementById('newPromptBtn'),
@@ -666,7 +646,6 @@
       refreshReminderBtn: document.getElementById('refreshReminderBtn'),
       sentenceOnlyInput: document.getElementById('sentenceOnlyInput'),
       addSentenceBtn: document.getElementById('addSentenceBtn'),
-      themeDots: document.querySelectorAll('.theme-dot'),
       exportBtn: document.getElementById('exportBtn'),
       importBtn: document.getElementById('importBtn'),
       importInput: document.getElementById('importInput')
@@ -702,7 +681,7 @@
       const file = event.target.files[0];
       if (!file) return;
 
-      if (!confirm('匯入資料將會覆蓋您目前的靈感與句子庫，建議先執行「匯出備份」。確定要匯入嗎？')) {
+      if (!confirm('確定要將匯入的資料附加到目前的靈感與句子庫中嗎？')) {
         event.target.value = '';
         return;
       }
@@ -714,12 +693,22 @@
           const parsed = JSON.parse(content);
           
           if (parsed && Array.isArray(parsed.entries) && Array.isArray(parsed.sentences)) {
-            entries = parsed.entries.map(normalizeEntry);
-            sentences = parsed.sentences.map(normalizeSentence);
+            const newEntries = parsed.entries.map(normalizeEntry);
+            const newSentences = parsed.sentences.map(normalizeSentence);
+
+            const existingEntryIds = new Set(entries.map(ent => ent.id));
+            const filteredNewEntries = newEntries.filter(ent => !existingEntryIds.has(ent.id));
+
+            const existingSentenceIds = new Set(sentences.map(sent => sent.id));
+            const filteredNewSentences = newSentences.filter(sent => !existingSentenceIds.has(sent.id));
+
+            entries = [...entries, ...filteredNewEntries];
+            sentences = [...sentences, ...filteredNewSentences];
+
             saveEntries();
             saveSentences();
             renderAll();
-            setStatus('資料匯入成功！已還原所有靈感與句子。');
+            setStatus(`資料匯入成功！已附加 ${filteredNewEntries.length} 則靈感與 ${filteredNewSentences.length} 句句子。`);
           } else {
             throw new Error('不正確的檔案格式');
           }
@@ -727,28 +716,9 @@
           console.error('Import failed:', err);
           setStatus('匯入失敗：請確保檔案格式正確且未損壞。', true);
         }
-        event.target.value = ''; // 重設以便下次點選
+        event.target.value = '';
       };
       reader.readAsText(file);
-    }
-
-    function setTheme(themeName) {
-      // 移除舊主題
-      const themes = ['theme-mint', 'theme-sakura', 'theme-lavender', 'theme-sky', 'theme-lemon'];
-      document.body.classList.remove(...themes);
-      
-      // 加入新主題
-      if (themeName && themeName !== 'theme-mint') {
-        document.body.classList.add(themeName);
-      }
-
-      // 更新圓點狀態
-      els.themeDots.forEach(dot => {
-        dot.classList.toggle('active', dot.dataset.theme === themeName);
-      });
-
-      // 儲存設定
-      localStorage.setItem(STORAGE_KEYS.theme, themeName);
     }
 
     function makeId() {
@@ -829,6 +799,11 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+    }
+
+    function linkify(text) {
+      const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+      return text.replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: var(--primary-dark); text-decoration: underline; word-break: break-all;">$1</a>');
     }
 
     function formatDateTime(isoString) {
@@ -970,6 +945,12 @@
       renderAll();
     }
 
+    function deleteSentence(id) {
+      sentences = sentences.filter(item => item.id !== id);
+      saveSentences();
+      renderAll();
+    }
+
     function filteredEntries() {
       const keyword = els.searchInput.value.trim().toLowerCase();
       const category = els.filterCategory.value;
@@ -987,7 +968,7 @@
 
       for (const item of favoriteSentences) {
         cards.push(`
-          <article class="entry">
+          <article class="entry" style="padding: 12px 16px;">
             <div class="entry-head" style="justify-content:flex-end; margin-bottom:0;">
               <div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>
             </div>
@@ -1051,7 +1032,7 @@
             ${entry.mood ? `<div class="badge">心情：${escapeHtml(entry.mood)}</div>` : ''}
           </div>
           ${entry.content ? `<div class="entry-content">${escapeHtml(entry.content)}</div>` : ''}
-          ${entry.articleNote ? `<div class="article-note">${escapeHtml(entry.articleNote)}</div>` : ''}
+          ${entry.articleNote ? `<div class="article-note">${linkify(escapeHtml(entry.articleNote))}</div>` : ''}
         </article>
       `).join('');
     }
@@ -1078,7 +1059,7 @@
             ${entry.mood ? `<div class="badge">心情：${escapeHtml(entry.mood)}</div>` : ''}
           </div>
           ${entry.content ? `<div class="entry-content">${escapeHtml(entry.content)}</div>` : ''}
-          ${entry.isArticle && entry.articleNote && editingArticleNoteId !== entry.id ? `<div class="article-note">文章備註：${escapeHtml(entry.articleNote)}</div>` : ''}
+          ${entry.isArticle && entry.articleNote && editingArticleNoteId !== entry.id ? `<div class="article-note">文章備註：${linkify(escapeHtml(entry.articleNote))}</div>` : ''}
           ${entry.isArticle && editingArticleNoteId === entry.id ? `
             <div class="article-note-editor">
               <input id="articleNoteInput-${entry.id}" type="text" value="${escapeHtml(entry.articleNote)}" placeholder="輸入這則靈感後來變成哪篇文章" />
@@ -1110,47 +1091,35 @@
       }
 
       els.sentenceList.innerHTML = filtered.map(item => `
-        <article class="sentence-card">
-          <div class="entry-head">
-            <div class="entry-content" style="margin-bottom:0;">${escapeHtml(item.text)}</div>
-            ${item.favorite ? '<div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>' : ''}
+        <article class="entry" style="padding: 12px 16px;">
+          <div class="entry-head" style="margin-bottom: 4px; justify-content: flex-end;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+              ${item.favorite ? '<div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>' : ''}
+            </div>
           </div>
-          <div class="entry-meta">
-            <div class="badge">${formatDateTime(item.createdAt)}</div>
+          <div class="entry-meta" style="margin-bottom: 6px;">
+            <div class="badge" style="font-size: 11px; padding: 4px 8px;">${formatDateTime(item.createdAt)}</div>
           </div>
-          <div class="entry-footer" style="margin-top:10px; justify-content:flex-end;">
-            <button type="button" class="btn-light" data-action="toggle-sentence-fav" data-id="${item.id}">${item.favorite ? '取消收藏' : '收藏'}</button>
+          <div class="entry-content" style="margin-bottom: 10px; font-size: 14px;">${escapeHtml(item.text)}</div>
+          <div class="entry-footer" style="margin-top:0; justify-content: space-between; gap: 8px;">
+            <button type="button" class="btn-light" data-action="toggle-sentence-fav" data-id="${item.id}" style="padding: 8px 14px; font-size: 13px;">${item.favorite ? '取消收藏' : '收藏'}</button>
+            <button type="button" class="btn-danger" data-action="delete-sentence" data-id="${item.id}" style="padding: 8px 14px; font-size: 13px;">刪除</button>
           </div>
         </article>
       `).join('');
     }
 
-    function getGoalProgress(count) {
-      const goals = [3, 5, 7, 10, 15, 20, 25, 30];
-      const nextGoal = goals.find(g => g > count);
-      if (!nextGoal) return '✨ 太厲害了！已達成所有目標！';
-      const remaining = nextGoal - count;
-      if (remaining === 1) return `🎯 下個目標 ${nextGoal}：加油！只差最後一個！`;
-      return `🎯 下個目標 ${nextGoal}：再存下 ${remaining} 個就達標囉！`;
-    }
-
     function renderStats() {
       els.totalCount.textContent = String(entries.length);
-      els.totalGoalInfo.textContent = getGoalProgress(entries.length);
-
       const todayKey = getTodayKey();
       els.todayCount.textContent = String(entries.filter(entry => entry.createdAt.startsWith(todayKey)).length);
-
       els.sentenceCount.textContent = String(sentences.length);
-      els.sentenceGoalInfo.textContent = getGoalProgress(sentences.length);
-
       const counts = entries.reduce((acc, entry) => {
         if (entry.category) {
           acc[entry.category] = (acc[entry.category] || 0) + 1;
         }
         return acc;
       }, {});
-
       const sortedCounts = Object.entries(counts).sort((a, b) => b[1] - a[1]);
       els.topCategory.textContent = sortedCounts.length ? sortedCounts[0][0] : '—';
     }
@@ -1168,14 +1137,11 @@
       console.assert(sampleSentence.text === '測試句子', 'string sentence should normalize to object');
       console.assert(sampleSentence.favorite === false, 'new normalized sentence favorite should default false');
       console.assert(typeof sampleSentence.createdAt === 'string' && sampleSentence.createdAt.length > 0, 'normalized sentence should include createdAt');
-
       const sampleEntry = normalizeEntry({ title: '標題', content: '內容' });
       console.assert(sampleEntry.title === '標題', 'entry title should be preserved');
       console.assert(sampleEntry.favorite === false, 'entry favorite should default false');
-
       const lines = '第一行\n第二行'.split(/\r?\n/);
       console.assert(lines[0] === '第一行' && lines[1] === '第二行', 'newline splitting should work');
-
       const cards = favoriteCardsMarkup();
       console.assert(Array.isArray(cards), 'favoriteCardsMarkup should return an array');
     }
@@ -1188,27 +1154,23 @@
     els.filterCategory.addEventListener('change', renderEntries);
     els.sentenceSearchInput.addEventListener('input', renderSentences);
     els.addSentenceBtn.addEventListener('click', addSentence);
-
-    // 匯出與匯入事件
     els.exportBtn.addEventListener('click', exportData);
     els.importBtn.addEventListener('click', () => els.importInput.click());
     els.importInput.addEventListener('change', importData);
 
-    // 主題切換點擊事件
-    els.themeDots.forEach(dot => {
-      dot.addEventListener('click', () => {
-        setTheme(dot.dataset.theme);
-      });
-    });
-
-    // 初始化主題
-    const savedTheme = localStorage.getItem(STORAGE_KEYS.theme) || 'theme-mint';
-    setTheme(savedTheme);
-
     els.sentenceList.addEventListener('click', (event) => {
-      const button = event.target.closest('button[data-action="toggle-sentence-fav"]');
+      const button = event.target.closest('button[data-action]');
       if (!button) return;
-      toggleSentenceFavorite(button.dataset.id);
+      const id = button.dataset.id;
+      const action = button.dataset.action;
+      if (!id || !action) return;
+      if (action === 'toggle-sentence-fav') {
+        toggleSentenceFavorite(id);
+      } else if (action === 'delete-sentence') {
+        if (confirm('確定要刪除這句句子嗎？')) {
+          deleteSentence(id);
+        }
+      }
     });
 
     els.entryList.addEventListener('click', (event) => {
@@ -1217,10 +1179,8 @@
       const id = button.dataset.id;
       const action = button.dataset.action;
       if (!id || !action) return;
-
       event.preventDefault();
       event.stopPropagation();
-
       if (action === 'delete-entry') {
         const card = button.closest('.entry');
         if (card) {
@@ -1248,7 +1208,6 @@
     rotateReminder();
     currentReminderIndex = (currentReminderIndex - 1 + reminders.length) % reminders.length;
     saveIndex(STORAGE_KEYS.reminderIndex, currentReminderIndex);
-
     els.promptText.textContent = prompts[currentPromptIndex % prompts.length];
     els.dailyReminder.textContent = reminders[currentReminderIndex % reminders.length];
     runSelfTests();
