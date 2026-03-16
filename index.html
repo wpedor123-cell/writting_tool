@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>靈感簿 Inspiration Flow</title>
+  <style>
+    :root {
+      --card: #fffdfa;
+      --primary: #7a9a7c;
+      --primary-dark: #5c7a5f;
+      --accent-soft: #fde6d0;
+      --text: #2f2f2f;
+      --subtext: #6f6a63;
+      --border: #e7ded2;
+      --danger: #c96b5c;
+      --shadow: 0 10px 28px rgba(80, 72, 60, 0.08);
+      --radius-lg: 24px;
+      --radius-md: 16px;
+    }
+
+    /* 馬卡龍色系主題 */
+    body.theme-sakura {
+      --primary: #e59da9;
+      --primary-dark: #cc8491;
+      --accent-soft: #fce4e8;
+      --border: #f2e1e4;
+    }
+    body.theme-lavender {
+      --primary: #b09dfa;
+      --primary-dark: #9681e5;
+      --accent-soft: #f0ebff;
+      --border: #e6e0f8;
+    }
+    body.theme-sky {
+      --primary: #8ecae6;
+      --primary-dark: #6fb3d4;
+      --accent-soft: #e1f5fe;
+      --border: #d2eaf5;
+    }
+    body.theme-lemon {
+      --primary: #e9c46a;
+      --primary-dark: #d4ac4a;
+      --accent-soft: #fefae0;
+      --border: #f2ebd1;
+    }
+    body.theme-mint {
+      --primary: #7a9a7c;
+      --primary-dark: #5c7a5f;
+      --accent-soft: #e7f4ea;
+      --border: #dce7dd;
+    }
+
+    .theme-picker {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .theme-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+
+    .theme-dot:hover { transform: scale(1.2); }
+    .theme-dot.active { border-color: var(--text); transform: scale(1.1); }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: linear-gradient(180deg, #f8f5f1 0%, #f4efe8 100%);
+      color: var(--text);
+    }
+
+    .container {
+      width: min(1180px, calc(100% - 32px));
+      margin: 28px auto 48px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #fffdfa, #f7f1e8);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: 1.3fr 0.9fr;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.15;
+      letter-spacing: 0.4px;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--subtext);
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .hero-card {
+      background: rgba(255,255,255,0.75);
+      border: 1px solid #efe5d8;
+      border-radius: 22px;
+      padding: 18px;
+    }
+
+    .hero-tip-title {
+      font-size: 13px;
+      color: var(--primary-dark);
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: 0.6px;
+    }
+
+    .hero-tip {
+      font-size: 18px;
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+
+    .layout {
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .panel h2 {
+      margin: 0 0 14px;
+      font-size: 22px;
+    }
+
+    .sub {
+      color: var(--subtext);
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 14px;
+    }
+
+    textarea, input, select {
+      width: 100%;
+      border: 1px solid #ddd2c6;
+      background: #fffefb;
+      border-radius: 14px;
+      padding: 14px 15px;
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+      transition: 0.18s ease;
+    }
+
+    textarea:focus, input:focus, select:focus {
+      border-color: #cdb59a;
+      box-shadow: 0 0 0 4px rgba(242, 166, 90, 0.12);
+    }
+
+    textarea {
+      min-height: 160px;
+      resize: vertical;
+      line-height: 1.7;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.2s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover { background: var(--primary-dark); }
+
+    .btn-soft {
+      background: var(--accent-soft);
+      color: #8a5627;
+    }
+
+    .btn-light {
+      background: #f4efe8;
+      color: #675f56;
+    }
+
+    .btn-danger {
+      background: #fbe7e3;
+      color: var(--danger);
+    }
+
+    .btn-success {
+      background: #e7f4ea;
+      color: #4f7a59;
+    }
+
+    .article-note {
+      margin-top: 10px;
+      padding: 12px;
+      border: 1px solid #dceadf;
+      background: #f6fbf7;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #4f6a56;
+    }
+
+    .article-note-editor {
+      margin-top: 10px;
+      padding: 12px;
+      border: 1px solid #dceadf;
+      background: #f6fbf7;
+      border-radius: 14px;
+    }
+
+    .article-note-editor input {
+      margin-bottom: 10px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .stat {
+      background: linear-gradient(180deg, #fffdf9 0%, #fcf5ed 100%);
+      border: 1px solid #efe3d5;
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .stat .label {
+      color: var(--subtext);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .stat .value {
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .stat .goal-text {
+      font-size: 12px;
+      color: var(--primary-dark);
+      margin-top: 6px;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    .prompt-box {
+      background: linear-gradient(180deg, #fffaf5, #fff3e6);
+      border: 1px solid #f0dcc4;
+      border-radius: 18px;
+      padding: 18px;
+      margin-top: 8px;
+    }
+
+    .prompt-text {
+      font-size: 18px;
+      line-height: 1.8;
+      margin-bottom: 12px;
+    }
+
+    .small-note {
+      font-size: 13px;
+      color: var(--subtext);
+      margin-top: 8px;
+      min-height: 20px;
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .entry-list, .sentence-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+      max-height: 700px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .entry, .sentence-card {
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      border: 1px solid #ebdfd1;
+      border-radius: 18px;
+      background: #fffdfa;
+      padding: 16px;
+    }
+
+    .entry-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .entry-title {
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      background: #f4efe8;
+      color: #6f6559;
+      font-size: 12px;
+      padding: 6px 10px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .entry-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .entry-content {
+      white-space: pre-wrap;
+      line-height: 1.8;
+      color: #3b3936;
+      font-size: 15px;
+      margin-bottom: 12px;
+      word-break: break-word;
+    }
+
+    .entry-footer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .empty {
+      border: 1px dashed #dacdbf;
+      background: #fffaf5;
+      border-radius: 18px;
+      padding: 22px;
+      color: var(--subtext);
+      line-height: 1.8;
+      text-align: center;
+    }
+
+    .entry.fade-out {
+      opacity: 0;
+      transform: scale(0.98);
+    }
+
+    .footer-note {
+      text-align: center;
+      color: #8c8277;
+      font-size: 13px;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 980px) {
+      .hero, .layout {
+        grid-template-columns: 1fr;
+      }
+      .stats {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .container { width: min(100% - 20px, 100%); margin-top: 14px; }
+      .panel, .hero { padding: 16px; border-radius: 22px; }
+      .grid-2, .search-row, .stats {
+        grid-template-columns: 1fr;
+      }
+      .entry-head {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="hero">
+      <div>
+        <h1>靈感簿 Inspiration Flow</h1>
+        <p>把一瞬間的句子、夢境與畫面留下來。<br>不需要等靈感完整，只要記得它曾經來過。</p>
+        <div class="theme-picker">
+          <div class="theme-dot theme-mint active" data-theme="theme-mint" title="薄荷綠" style="background:#7a9a7c;"></div>
+          <div class="theme-dot theme-sakura" data-theme="theme-sakura" title="櫻花粉" style="background:#e59da9;"></div>
+          <div class="theme-dot theme-lavender" data-theme="theme-lavender" title="薰衣草紫" style="background:#b09dfa;"></div>
+          <div class="theme-dot theme-sky" data-theme="theme-sky" title="天空藍" style="background:#8ecae6;"></div>
+          <div class="theme-dot theme-lemon" data-theme="theme-lemon" title="蜂蜜黃" style="background:#e9c46a;"></div>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="hero-tip-title">今日心理與寫作小提醒</div>
+        <div class="hero-tip" id="dailyReminder"></div>
+        <button class="btn-soft" id="refreshReminderBtn" type="button">換一句提醒</button>
+      </div>
+    </section>
+
+    <div class="layout">
+      <div>
+        <section class="panel">
+          <h2>創作統計</h2>
+          <div class="stats">
+            <div class="stat">
+              <div class="label">總靈感數</div>
+              <div class="value" id="totalCount">0</div>
+              <div class="goal-text" id="totalGoalInfo"></div>
+            </div>
+            <div class="stat">
+              <div class="label">今天新增</div>
+              <div class="value" id="todayCount">0</div>
+            </div>
+            <div class="stat">
+              <div class="label">句子庫</div>
+              <div class="value" id="sentenceCount">0</div>
+              <div class="goal-text" id="sentenceGoalInfo"></div>
+            </div>
+            <div class="stat">
+              <div class="label">最常類型</div>
+              <div class="value" id="topCategory">—</div>
+            </div>
+          </div>
+          <div class="toolbar" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
+            <button class="btn-light" id="exportBtn" type="button" style="flex:1;">匯出備份 (.txt)</button>
+            <button class="btn-light" id="importBtn" type="button" style="flex:1;">匯入資料</button>
+            <input type="file" id="importInput" style="display:none;" accept=".txt" />
+          </div>
+        </section>
+
+        <section class="panel" style="margin-top:22px;">
+          <h2>快速記錄靈感</h2>
+          <div class="sub">今天有什麼想法？一句話也可以。你不需要立刻寫成完整作品。</div>
+
+          <div class="grid-2">
+            <div>
+              <label for="titleInput">標題（可選）</label>
+              <input id="titleInput" type="text" placeholder="可留空，例如：雨後操場" />
+            </div>
+            <div>
+              <label for="categoryInput">類型（可選）</label>
+              <select id="categoryInput">
+                <option value=""></option>
+                <option value="詩">詩</option>
+                <option value="散文">散文</option>
+                <option value="小說">小說</option>
+                <option value="夢境">夢境</option>
+                <option value="想法">想法</option>
+                <option value="角色">角色</option>
+                <option value="生活觀察">生活觀察</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top: 12px;">
+            <label for="contentInput">內容</label>
+            <textarea id="contentInput" placeholder="記下一句話、畫面或想法"></textarea>
+          </div>
+
+          <div class="grid-2" style="margin-top: 12px;">
+            <div>
+              <label for="moodInput">當下心情（可選）</label>
+              <input id="moodInput" type="text" placeholder="可留空，例如：平靜" />
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <button class="btn-primary" id="saveBtn" type="button">存下靈感</button>
+            <button class="btn-light" id="clearBtn" type="button">清空輸入</button>
+          </div>
+          <div class="small-note" id="saveStatus">你的資料會自動保存在這台裝置的瀏覽器中。</div>
+        </section>
+
+        <section class="panel" style="margin-top:22px;">
+          <h2>今日寫作提示</h2>
+          <div class="prompt-box">
+            <div class="prompt-text" id="promptText"></div>
+            <div class="toolbar">
+              <button class="btn-primary" id="newPromptBtn" type="button">換一個提示</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" style="margin-top:22px;">
+          <h2>靈感完成區</h2>
+          <div class="sub">這些靈感已經發展成完整作品。</div>
+          <div class="entry-list" id="articleList"></div>
+        </section>
+      </div>
+
+      <div>
+        <section class="panel">
+          <h2>句子庫</h2>
+          <div class="sub">記錄你喜歡或想到的一句話。</div>
+          <div class="toolbar">
+            <input id="sentenceOnlyInput" type="text" placeholder="輸入一句話" style="flex:1; min-width:220px;" />
+            <button class="btn-primary" id="addSentenceBtn" type="button">加入句子庫</button>
+          </div>
+          <input id="sentenceSearchInput" type="text" placeholder="搜尋句子" style="margin-top:10px;" />
+          <div class="sentence-list" id="sentenceList"></div>
+        </section>
+
+        <section class="panel" style="margin-top:22px;">
+          <h2>靈感庫</h2>
+          <div class="search-row">
+            <input id="searchInput" type="text" placeholder="搜尋靈感" />
+            <select id="filterCategory">
+              <option value="全部">全部類型</option>
+              <option value="詩">詩</option>
+              <option value="散文">散文</option>
+              <option value="小說">小說</option>
+              <option value="夢境">夢境</option>
+              <option value="想法">想法</option>
+              <option value="角色">角色</option>
+              <option value="生活觀察">生活觀察</option>
+            </select>
+          </div>
+          <div class="entry-list" id="entryList"></div>
+        </section>
+
+        <section class="panel" style="margin-top:22px;">
+          <h2>收藏區</h2>
+          <div class="sub">你標記為重要的靈感與句子。</div>
+          <div class="entry-list" id="favoriteList"></div>
+        </section>
+      </div>
+    </div>
+
+    <div class="footer-note">靈感不必完整，先把它留下來就很好。</div>
+  </div>
+
+  <script>
+    const STORAGE_KEYS = {
+      entries: 'writing_inspiration_entries_v1',
+      sentences: 'writing_inspiration_sentences_v1',
+      reminderIndex: 'writing_inspiration_reminder_index_v1',
+      promptIndex: 'writing_inspiration_prompt_index_v1',
+      theme: 'writing_inspiration_theme_v1'
+    };
+
+    const prompts = [
+      '描寫一個日常中被忽略的小動作，並讓它帶出一種情緒。',
+      '寫下一個你今天觀察到的細節，然後問自己：它為什麼讓我記住？',
+      '用三句話寫一個沒有說出口的想念。',
+      '把一場夢中的畫面寫下來，不需要解釋，只保留氣氛。',
+      '描寫一個人表面平靜，但其實心裡有波動的瞬間。',
+      '從一句對白開始，讓一個故事慢慢出現。',
+      '寫一個「原來如此」的時刻，讓它像頓悟一樣落下。',
+      '記錄今天最安靜的一刻，試著讓讀者也站進那個畫面。',
+      '把一種身體感受寫成文字，例如鼻酸、手心冒汗、腿很酸。',
+      '寫一個你以為不重要，回頭看卻很有意義的小事。',
+      '描寫一個你想靠近卻不敢太靠近的人，不要直接說喜歡。',
+      '選一個物件當主角，讓它替人保管秘密。'
+    ];
+
+    const reminders = [
+      '有些作品不是想很久才誕生，而是先寫下一句，世界才慢慢長出來。',
+      '今天不用逼自己寫得完整，只要誠實記下一個瞬間就夠了。',
+      '靈感很輕，先接住它，之後再慢慢雕刻。',
+      '你記下的不是零碎，而是未來作品的種子。',
+      '有時候，一句話就是整篇作品最早的心跳。',
+      '不用急著證明自己會寫，先相信自己有感受。',
+      '創作不是每次都要盛大，有時只是一個安靜的發現。',
+      '當你願意看見細節，故事就會自己靠近你。',
+      '有些句子只是路過你的腦海，先留下來再說。',
+      '不要急著判斷好不好，先把它寫下來。',
+      '很多作品其實只是從一個小觀察開始。',
+      '你今天注意到的細節，也許就是一篇作品的開頭。',
+      '一句簡單的記錄，可能會在未來長成一段故事。',
+      '創作有時不是想出來，而是慢慢發現的。',
+      '有感覺的地方，通常藏著一個故事。',
+      '當一句話讓你停下來，它就值得被記住。',
+      '靈感常常很小聲，所以要先把它寫下來。',
+      '很多好的作品，其實只是誠實的觀察。',
+      '有些畫面當下很普通，但寫下來就不一樣了。',
+      '創作不是每天都有高潮，但每天都可以留下痕跡。',
+      '先寫下來，再慢慢理解它的意義。',
+      '有些想法當下很模糊，但未來會變清楚。',
+      '不要等到完美的句子，先記住不完整的那一句。',
+      '當你願意停下來觀察，靈感就會出現。',
+      '有時候最好的素材，其實就在日常裡。',
+      '創作不一定要宏大，一個瞬間就夠了。',
+      '你看到的世界，和別人其實不一樣。',
+      '很多故事都藏在很小的細節裡。',
+      '有些句子只是提醒你：這裡有東西值得寫。',
+      '先留下線索，未來再把故事補上。'
+    ];
+
+    const els = {
+      titleInput: document.getElementById('titleInput'),
+      categoryInput: document.getElementById('categoryInput'),
+      contentInput: document.getElementById('contentInput'),
+      moodInput: document.getElementById('moodInput'),
+      saveBtn: document.getElementById('saveBtn'),
+      clearBtn: document.getElementById('clearBtn'),
+      saveStatus: document.getElementById('saveStatus'),
+      entryList: document.getElementById('entryList'),
+      articleList: document.getElementById('articleList'),
+      favoriteList: document.getElementById('favoriteList'),
+      sentenceList: document.getElementById('sentenceList'),
+      sentenceSearchInput: document.getElementById('sentenceSearchInput'),
+      totalCount: document.getElementById('totalCount'),
+      todayCount: document.getElementById('todayCount'),
+      sentenceCount: document.getElementById('sentenceCount'),
+      totalGoalInfo: document.getElementById('totalGoalInfo'),
+      sentenceGoalInfo: document.getElementById('sentenceGoalInfo'),
+      topCategory: document.getElementById('topCategory'),
+      promptText: document.getElementById('promptText'),
+      newPromptBtn: document.getElementById('newPromptBtn'),
+      searchInput: document.getElementById('searchInput'),
+      filterCategory: document.getElementById('filterCategory'),
+      dailyReminder: document.getElementById('dailyReminder'),
+      refreshReminderBtn: document.getElementById('refreshReminderBtn'),
+      sentenceOnlyInput: document.getElementById('sentenceOnlyInput'),
+      addSentenceBtn: document.getElementById('addSentenceBtn'),
+      themeDots: document.querySelectorAll('.theme-dot'),
+      exportBtn: document.getElementById('exportBtn'),
+      importBtn: document.getElementById('importBtn'),
+      importInput: document.getElementById('importInput')
+    };
+
+    let entries = loadEntries();
+    let sentences = loadSentences();
+    let currentPromptIndex = loadIndex(STORAGE_KEYS.promptIndex, 0);
+    let currentReminderIndex = loadIndex(STORAGE_KEYS.reminderIndex, 0);
+    let editingArticleNoteId = null;
+
+    function exportData() {
+      const data = {
+        entries: entries,
+        sentences: sentences,
+        version: 'v1',
+        exportedAt: new Date().toISOString()
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const dateStr = getTodayKey();
+      a.download = `靈感簿備份_${dateStr}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setStatus('資料已成功匯出為 .txt 備份檔案。');
+    }
+
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!confirm('匯入資料將會覆蓋您目前的靈感與句子庫，建議先執行「匯出備份」。確定要匯入嗎？')) {
+        event.target.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const content = e.target.result;
+          const parsed = JSON.parse(content);
+          
+          if (parsed && Array.isArray(parsed.entries) && Array.isArray(parsed.sentences)) {
+            entries = parsed.entries.map(normalizeEntry);
+            sentences = parsed.sentences.map(normalizeSentence);
+            saveEntries();
+            saveSentences();
+            renderAll();
+            setStatus('資料匯入成功！已還原所有靈感與句子。');
+          } else {
+            throw new Error('不正確的檔案格式');
+          }
+        } catch (err) {
+          console.error('Import failed:', err);
+          setStatus('匯入失敗：請確保檔案格式正確且未損壞。', true);
+        }
+        event.target.value = ''; // 重設以便下次點選
+      };
+      reader.readAsText(file);
+    }
+
+    function setTheme(themeName) {
+      // 移除舊主題
+      const themes = ['theme-mint', 'theme-sakura', 'theme-lavender', 'theme-sky', 'theme-lemon'];
+      document.body.classList.remove(...themes);
+      
+      // 加入新主題
+      if (themeName && themeName !== 'theme-mint') {
+        document.body.classList.add(themeName);
+      }
+
+      // 更新圓點狀態
+      els.themeDots.forEach(dot => {
+        dot.classList.toggle('active', dot.dataset.theme === themeName);
+      });
+
+      // 儲存設定
+      localStorage.setItem(STORAGE_KEYS.theme, themeName);
+    }
+
+    function makeId() {
+      return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+    }
+
+    function normalizeEntry(entry) {
+      return {
+        id: typeof entry?.id === 'string' ? entry.id : makeId(),
+        title: typeof entry?.title === 'string' ? entry.title : '一句靈感',
+        category: typeof entry?.category === 'string' ? entry.category : '',
+        content: typeof entry?.content === 'string' ? entry.content : '',
+        mood: typeof entry?.mood === 'string' ? entry.mood : '',
+        isArticle: Boolean(entry?.isArticle),
+        favorite: Boolean(entry?.favorite),
+        articleNote: typeof entry?.articleNote === 'string' ? entry.articleNote : '',
+        createdAt: typeof entry?.createdAt === 'string' ? entry.createdAt : new Date().toISOString()
+      };
+    }
+
+    function normalizeSentence(item) {
+      if (typeof item === 'string') {
+        return { id: makeId(), text: item, favorite: false, createdAt: new Date().toISOString() };
+      }
+      return {
+        id: typeof item?.id === 'string' ? item.id : makeId(),
+        text: typeof item?.text === 'string' ? item.text : '',
+        favorite: Boolean(item?.favorite),
+        createdAt: typeof item?.createdAt === 'string' ? item.createdAt : new Date().toISOString()
+      };
+    }
+
+    function loadEntries() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEYS.entries);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed.map(normalizeEntry) : [];
+      } catch (error) {
+        console.error('Failed to load entries:', error);
+        return [];
+      }
+    }
+
+    function loadSentences() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEYS.sentences);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed.map(normalizeSentence).filter(item => item.text) : [];
+      } catch (error) {
+        console.error('Failed to load sentences:', error);
+        return [];
+      }
+    }
+
+    function saveEntries() {
+      localStorage.setItem(STORAGE_KEYS.entries, JSON.stringify(entries));
+    }
+
+    function saveSentences() {
+      localStorage.setItem(STORAGE_KEYS.sentences, JSON.stringify(sentences));
+    }
+
+    function loadIndex(key, fallback) {
+      const value = Number(localStorage.getItem(key));
+      return Number.isInteger(value) ? value : fallback;
+    }
+
+    function saveIndex(key, value) {
+      localStorage.setItem(key, String(value));
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function formatDateTime(isoString) {
+      const date = new Date(isoString);
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      const hh = String(date.getHours()).padStart(2, '0');
+      const mm = String(date.getMinutes()).padStart(2, '0');
+      return `${y}/${m}/${d} ${hh}:${mm}`;
+    }
+
+    function getTodayKey() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function setStatus(message, isError = false) {
+      els.saveStatus.textContent = message;
+      els.saveStatus.style.color = isError ? 'var(--danger)' : 'var(--subtext)';
+    }
+
+    function rotatePrompt() {
+      currentPromptIndex = (currentPromptIndex + 1) % prompts.length;
+      saveIndex(STORAGE_KEYS.promptIndex, currentPromptIndex);
+      els.promptText.textContent = prompts[currentPromptIndex];
+    }
+
+    function rotateReminder() {
+      currentReminderIndex = (currentReminderIndex + 1) % reminders.length;
+      saveIndex(STORAGE_KEYS.reminderIndex, currentReminderIndex);
+      els.dailyReminder.textContent = reminders[currentReminderIndex];
+    }
+
+    function clearForm() {
+      els.titleInput.value = '';
+      els.contentInput.value = '';
+      els.moodInput.value = '';
+      els.categoryInput.value = '';
+      setStatus('已清空輸入，可以重新記錄新的靈感。');
+    }
+
+    function saveEntry() {
+      const title = els.titleInput.value.trim();
+      const category = els.categoryInput.value.trim();
+      const content = els.contentInput.value.trim();
+      const mood = els.moodInput.value.trim();
+
+      if (!title && !content) {
+        setStatus('至少輸入內容或標題再存檔喔。', true);
+        return;
+      }
+
+      const lines = content ? content.split(/\r?\n/) : [];
+      const firstLine = lines.length ? lines[0].slice(0, 18) : '';
+      const finalTitle = title || firstLine || '一句靈感';
+
+      const entry = normalizeEntry({
+        id: makeId(),
+        title: finalTitle,
+        category,
+        content,
+        mood,
+        isArticle: false,
+        favorite: false,
+        articleNote: '',
+        createdAt: new Date().toISOString()
+      });
+
+      entries.unshift(entry);
+      saveEntries();
+      renderAll();
+      clearForm();
+    }
+
+    function addSentence() {
+      const value = els.sentenceOnlyInput.value.trim();
+      if (!value) return;
+      sentences.unshift(normalizeSentence({ id: makeId(), text: value, favorite: false, createdAt: new Date().toISOString() }));
+      saveSentences();
+      els.sentenceOnlyInput.value = '';
+      renderAll();
+    }
+
+    function toggleFavorite(id) {
+      entries = entries.map(entry => entry.id === id ? { ...entry, favorite: !entry.favorite } : entry);
+      saveEntries();
+      renderAll();
+    }
+
+    function toggleSentenceFavorite(id) {
+      sentences = sentences.map(item => item.id === id ? { ...item, favorite: !item.favorite } : item);
+      saveSentences();
+      renderAll();
+    }
+
+    function toggleArticleStatus(id) {
+      let becameArticle = false;
+      entries = entries.map(entry => {
+        if (entry.id !== id) return entry;
+        becameArticle = !entry.isArticle;
+        return { ...entry, isArticle: !entry.isArticle };
+      });
+      saveEntries();
+      renderAll();
+      setStatus(becameArticle ? '' : '已取消文章標記。');
+    }
+
+    function startArticleNoteEdit(id) {
+      editingArticleNoteId = id;
+      renderEntries();
+      setStatus('你可以直接在卡片裡寫文章備註。');
+    }
+
+    function cancelArticleNoteEdit() {
+      editingArticleNoteId = null;
+      renderEntries();
+      setStatus('已取消編輯文章備註。');
+    }
+
+    function saveArticleNote(id) {
+      const input = document.getElementById(`articleNoteInput-${id}`);
+      if (!input) return;
+      const value = input.value.trim();
+      entries = entries.map(entry => entry.id === id ? { ...entry, articleNote: value } : entry);
+      saveEntries();
+      editingArticleNoteId = null;
+      renderAll();
+      setStatus(value ? '已更新文章備註。' : '已清除文章備註。');
+    }
+
+    function deleteEntry(id) {
+      entries = entries.filter(entry => entry.id !== id);
+      if (editingArticleNoteId === id) editingArticleNoteId = null;
+      saveEntries();
+      renderAll();
+    }
+
+    function filteredEntries() {
+      const keyword = els.searchInput.value.trim().toLowerCase();
+      const category = els.filterCategory.value;
+      return entries.filter(entry => {
+        const matchesCategory = category === '全部' || entry.category === category;
+        const blob = [entry.title, entry.content, entry.mood, entry.category, entry.articleNote].join(' ').toLowerCase();
+        return matchesCategory && (!keyword || blob.includes(keyword));
+      });
+    }
+
+    function favoriteCardsMarkup() {
+      const favoriteEntries = entries.filter(entry => entry.favorite);
+      const favoriteSentences = sentences.filter(item => item.favorite);
+      const cards = [];
+
+      for (const item of favoriteSentences) {
+        cards.push(`
+          <article class="entry">
+            <div class="entry-head" style="justify-content:flex-end; margin-bottom:0;">
+              <div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>
+            </div>
+            <div class="entry-meta">
+              <div class="badge">${formatDateTime(item.createdAt)}</div>
+            </div>
+            <div class="entry-content">${escapeHtml(item.text)}</div>
+          </article>
+        `);
+      }
+
+      for (const item of favoriteEntries) {
+        cards.push(`
+          <article class="entry">
+            <div class="entry-head">
+              <div class="entry-title">${escapeHtml(item.title)}</div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                <div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>
+                ${item.category ? `<div class="badge">${escapeHtml(item.category)}</div>` : ''}
+                ${item.isArticle ? '<div class="badge" style="background:#e7f4ea; color:#4f7a59;">已成文章</div>' : ''}
+              </div>
+            </div>
+            <div class="entry-meta">
+              <div class="badge">${formatDateTime(item.createdAt)}</div>
+              ${item.mood ? `<div class="badge">心情：${escapeHtml(item.mood)}</div>` : ''}
+            </div>
+            ${item.content ? `<div class="entry-content">${escapeHtml(item.content)}</div>` : ''}
+          </article>
+        `);
+      }
+
+      return cards;
+    }
+
+    function renderFavorites() {
+      const cards = favoriteCardsMarkup();
+      els.favoriteList.innerHTML = cards.length
+        ? cards.join('')
+        : '<div class="empty">目前還沒有收藏的靈感或句子。</div>';
+    }
+
+    function renderArticles() {
+      const articles = entries.filter(entry => entry.isArticle);
+      if (!articles.length) {
+        els.articleList.innerHTML = '<div class="empty">目前還沒有已成文章的靈感。</div>';
+        return;
+      }
+
+      els.articleList.innerHTML = articles.map(entry => `
+        <article class="entry">
+          <div class="entry-head">
+            <div class="entry-title">${escapeHtml(entry.title)}</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+              ${entry.favorite ? '<div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>' : ''}
+              ${entry.category ? `<div class="badge">${escapeHtml(entry.category)}</div>` : ''}
+              <div class="badge" style="background:#e7f4ea;color:#4f7a59;">文章</div>
+            </div>
+          </div>
+          <div class="entry-meta">
+            <div class="badge">${formatDateTime(entry.createdAt)}</div>
+            ${entry.mood ? `<div class="badge">心情：${escapeHtml(entry.mood)}</div>` : ''}
+          </div>
+          ${entry.content ? `<div class="entry-content">${escapeHtml(entry.content)}</div>` : ''}
+          ${entry.articleNote ? `<div class="article-note">${escapeHtml(entry.articleNote)}</div>` : ''}
+        </article>
+      `).join('');
+    }
+
+    function renderEntries() {
+      const list = filteredEntries();
+      if (!list.length) {
+        els.entryList.innerHTML = '<div class="empty">目前還沒有符合條件的靈感。<br>你可以先記下一句話，讓它成為作品的起點。</div>';
+        return;
+      }
+
+      els.entryList.innerHTML = list.map(entry => `
+        <article class="entry">
+          <div class="entry-head">
+            <div class="entry-title">${escapeHtml(entry.title)}</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+              ${entry.favorite ? '<div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>' : ''}
+              ${entry.category ? `<div class="badge">${escapeHtml(entry.category)}</div>` : ''}
+              ${entry.isArticle ? '<div class="badge" style="background:#e7f4ea; color:#4f7a59;">已成文章</div>' : ''}
+            </div>
+          </div>
+          <div class="entry-meta">
+            <div class="badge">${formatDateTime(entry.createdAt)}</div>
+            ${entry.mood ? `<div class="badge">心情：${escapeHtml(entry.mood)}</div>` : ''}
+          </div>
+          ${entry.content ? `<div class="entry-content">${escapeHtml(entry.content)}</div>` : ''}
+          ${entry.isArticle && entry.articleNote && editingArticleNoteId !== entry.id ? `<div class="article-note">文章備註：${escapeHtml(entry.articleNote)}</div>` : ''}
+          ${entry.isArticle && editingArticleNoteId === entry.id ? `
+            <div class="article-note-editor">
+              <input id="articleNoteInput-${entry.id}" type="text" value="${escapeHtml(entry.articleNote)}" placeholder="輸入這則靈感後來變成哪篇文章" />
+              <div class="toolbar" style="margin-top:0;">
+                <button type="button" class="btn-primary" data-action="save-note" data-id="${entry.id}">儲存備註</button>
+                <button type="button" class="btn-light" data-action="cancel-note" data-id="${entry.id}">取消</button>
+              </div>
+            </div>
+          ` : ''}
+          <div class="entry-footer">
+            <button type="button" class="btn-light" data-action="toggle-fav" data-id="${entry.id}">${entry.favorite ? '取消收藏' : '收藏'}</button>
+            <button type="button" class="btn-success" data-action="toggle-article" data-id="${entry.id}">${entry.isArticle ? '取消文章' : '標記成文章'}</button>
+            ${entry.isArticle ? `<button type="button" class="btn-light" data-action="edit-note" data-id="${entry.id}">${entry.articleNote ? '修改文章備註' : '寫文章備註'}</button>` : ''}
+            <button type="button" class="btn-danger" data-action="delete-entry" data-id="${entry.id}">刪除</button>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    function renderSentences() {
+      const keyword = els.sentenceSearchInput.value.trim().toLowerCase();
+      const filtered = sentences.filter(item => item.text.toLowerCase().includes(keyword));
+
+      if (!filtered.length) {
+        els.sentenceList.innerHTML = keyword
+          ? '<div class="empty">找不到符合的句子。</div>'
+          : '<div class="empty">句子庫還是空的。<br>你可以先在上方輸入一句話，再加入句子庫。</div>';
+        return;
+      }
+
+      els.sentenceList.innerHTML = filtered.map(item => `
+        <article class="sentence-card">
+          <div class="entry-head">
+            <div class="entry-content" style="margin-bottom:0;">${escapeHtml(item.text)}</div>
+            ${item.favorite ? '<div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>' : ''}
+          </div>
+          <div class="entry-meta">
+            <div class="badge">${formatDateTime(item.createdAt)}</div>
+          </div>
+          <div class="entry-footer" style="margin-top:10px; justify-content:flex-end;">
+            <button type="button" class="btn-light" data-action="toggle-sentence-fav" data-id="${item.id}">${item.favorite ? '取消收藏' : '收藏'}</button>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    function getGoalProgress(count) {
+      const goals = [3, 5, 7, 10, 15, 20, 25, 30];
+      const nextGoal = goals.find(g => g > count);
+      if (!nextGoal) return '✨ 太厲害了！已達成所有目標！';
+      const remaining = nextGoal - count;
+      if (remaining === 1) return `🎯 下個目標 ${nextGoal}：加油！只差最後一個！`;
+      return `🎯 下個目標 ${nextGoal}：再存下 ${remaining} 個就達標囉！`;
+    }
+
+    function renderStats() {
+      els.totalCount.textContent = String(entries.length);
+      els.totalGoalInfo.textContent = getGoalProgress(entries.length);
+
+      const todayKey = getTodayKey();
+      els.todayCount.textContent = String(entries.filter(entry => entry.createdAt.startsWith(todayKey)).length);
+
+      els.sentenceCount.textContent = String(sentences.length);
+      els.sentenceGoalInfo.textContent = getGoalProgress(sentences.length);
+
+      const counts = entries.reduce((acc, entry) => {
+        if (entry.category) {
+          acc[entry.category] = (acc[entry.category] || 0) + 1;
+        }
+        return acc;
+      }, {});
+
+      const sortedCounts = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+      els.topCategory.textContent = sortedCounts.length ? sortedCounts[0][0] : '—';
+    }
+
+    function renderAll() {
+      renderEntries();
+      renderFavorites();
+      renderArticles();
+      renderSentences();
+      renderStats();
+    }
+
+    function runSelfTests() {
+      const sampleSentence = normalizeSentence('測試句子');
+      console.assert(sampleSentence.text === '測試句子', 'string sentence should normalize to object');
+      console.assert(sampleSentence.favorite === false, 'new normalized sentence favorite should default false');
+      console.assert(typeof sampleSentence.createdAt === 'string' && sampleSentence.createdAt.length > 0, 'normalized sentence should include createdAt');
+
+      const sampleEntry = normalizeEntry({ title: '標題', content: '內容' });
+      console.assert(sampleEntry.title === '標題', 'entry title should be preserved');
+      console.assert(sampleEntry.favorite === false, 'entry favorite should default false');
+
+      const lines = '第一行\n第二行'.split(/\r?\n/);
+      console.assert(lines[0] === '第一行' && lines[1] === '第二行', 'newline splitting should work');
+
+      const cards = favoriteCardsMarkup();
+      console.assert(Array.isArray(cards), 'favoriteCardsMarkup should return an array');
+    }
+
+    els.saveBtn.addEventListener('click', saveEntry);
+    els.clearBtn.addEventListener('click', clearForm);
+    els.newPromptBtn.addEventListener('click', rotatePrompt);
+    els.refreshReminderBtn.addEventListener('click', rotateReminder);
+    els.searchInput.addEventListener('input', renderEntries);
+    els.filterCategory.addEventListener('change', renderEntries);
+    els.sentenceSearchInput.addEventListener('input', renderSentences);
+    els.addSentenceBtn.addEventListener('click', addSentence);
+
+    // 匯出與匯入事件
+    els.exportBtn.addEventListener('click', exportData);
+    els.importBtn.addEventListener('click', () => els.importInput.click());
+    els.importInput.addEventListener('change', importData);
+
+    // 主題切換點擊事件
+    els.themeDots.forEach(dot => {
+      dot.addEventListener('click', () => {
+        setTheme(dot.dataset.theme);
+      });
+    });
+
+    // 初始化主題
+    const savedTheme = localStorage.getItem(STORAGE_KEYS.theme) || 'theme-mint';
+    setTheme(savedTheme);
+
+    els.sentenceList.addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-action="toggle-sentence-fav"]');
+      if (!button) return;
+      toggleSentenceFavorite(button.dataset.id);
+    });
+
+    els.entryList.addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-action]');
+      if (!button) return;
+      const id = button.dataset.id;
+      const action = button.dataset.action;
+      if (!id || !action) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (action === 'delete-entry') {
+        const card = button.closest('.entry');
+        if (card) {
+          card.classList.add('fade-out');
+          setTimeout(() => deleteEntry(id), 200);
+        } else {
+          deleteEntry(id);
+        }
+      } else if (action === 'toggle-fav') {
+        toggleFavorite(id);
+      } else if (action === 'toggle-article') {
+        toggleArticleStatus(id);
+      } else if (action === 'edit-note') {
+        startArticleNoteEdit(id);
+      } else if (action === 'save-note') {
+        saveArticleNote(id);
+      } else if (action === 'cancel-note') {
+        cancelArticleNoteEdit();
+      }
+    });
+
+    rotatePrompt();
+    currentPromptIndex = (currentPromptIndex - 1 + prompts.length) % prompts.length;
+    saveIndex(STORAGE_KEYS.promptIndex, currentPromptIndex);
+    rotateReminder();
+    currentReminderIndex = (currentReminderIndex - 1 + reminders.length) % reminders.length;
+    saveIndex(STORAGE_KEYS.reminderIndex, currentReminderIndex);
+
+    els.promptText.textContent = prompts[currentPromptIndex % prompts.length];
+    els.dailyReminder.textContent = reminders[currentReminderIndex % reminders.length];
+    runSelfTests();
+    renderAll();
+  </script>
+</body>
+</html>
