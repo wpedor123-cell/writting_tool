@@ -50,6 +50,15 @@
       font-size: clamp(28px, 4vw, 42px);
       line-height: 1.15;
       letter-spacing: 0.4px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .leaf-icon {
+      width: clamp(40px, 6vw, 56px);
+      height: auto;
+      filter: drop-shadow(0 4px 8px rgba(122, 154, 124, 0.2));
     }
 
     .hero p {
@@ -135,9 +144,24 @@
     }
 
     textarea {
-      min-height: 160px;
+      min-height: 120px;
       resize: vertical;
       line-height: 1.7;
+    }
+
+    .sentence-textarea {
+      min-height: 60px !important;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .panel-header h2 {
+      margin: 0 !important;
     }
 
     .grid-2 {
@@ -416,7 +440,10 @@
   <div class="container">
     <section class="hero">
       <div>
-        <h1>靈感簿 Inspiration Flow</h1>
+        <h1>
+          <img src="p1.png" alt="leaf" class="leaf-icon">
+          靈感簿 Inspiration Flow
+        </h1>
         <p>把一瞬間的句子、夢境與畫面留下來。<br>不需要等靈感完整，只要記得它曾經來過。</p>
       </div>
       <div class="hero-card">
@@ -524,11 +551,14 @@
       <div class="layout-col">
         <!-- 2. 句子庫 -->
         <section class="panel p-2">
-          <h2>句子庫</h2>
+          <div class="panel-header">
+            <h2>句子庫</h2>
+            <button class="btn-danger" id="clearAllSentencesBtn" type="button" style="padding: 6px 12px; font-size: 12px;">清空全部</button>
+          </div>
           <div class="sub">記錄你喜歡或想到的一句話。</div>
           <div class="toolbar">
-            <input id="sentenceOnlyInput" type="text" placeholder="輸入一句話" style="flex:1; min-width:220px;" />
-            <button class="btn-primary" id="addSentenceBtn" type="button">加入句子庫</button>
+            <textarea id="sentenceOnlyInput" class="sentence-textarea" placeholder="輸入一句話" style="flex:1; min-width:220px;"></textarea>
+            <button class="btn-primary" id="addSentenceBtn" type="button" style="align-self: flex-start;">加入句子庫</button>
           </div>
           <input id="sentenceSearchInput" type="text" placeholder="搜尋句子" style="margin-top:10px;" />
           <div class="sentence-list" id="sentenceList"></div>
@@ -536,7 +566,10 @@
 
         <!-- 4. 靈感庫 -->
         <section class="panel p-4">
-          <h2>靈感庫</h2>
+          <div class="panel-header">
+            <h2>靈感庫</h2>
+            <button class="btn-danger" id="clearAllEntriesBtn" type="button" style="padding: 6px 12px; font-size: 12px;">清空全部</button>
+          </div>
           <div class="search-row">
             <input id="searchInput" type="text" placeholder="搜尋靈感" />
             <select id="filterCategory">
@@ -646,6 +679,8 @@
       refreshReminderBtn: document.getElementById('refreshReminderBtn'),
       sentenceOnlyInput: document.getElementById('sentenceOnlyInput'),
       addSentenceBtn: document.getElementById('addSentenceBtn'),
+      clearAllSentencesBtn: document.getElementById('clearAllSentencesBtn'),
+      clearAllEntriesBtn: document.getElementById('clearAllEntriesBtn'),
       exportBtn: document.getElementById('exportBtn'),
       importBtn: document.getElementById('importBtn'),
       importInput: document.getElementById('importInput')
@@ -1020,6 +1055,24 @@
       renderAll();
     }
 
+    function clearAllEntries() {
+      if (confirm('確定要清空全部的靈感庫資料嗎？此操作不可撤銷，建議先匯出備份。')) {
+        entries = [];
+        saveEntries();
+        renderAll();
+        setStatus('靈感庫已全部清空。');
+      }
+    }
+
+    function clearAllSentences() {
+      if (confirm('確定要清空全部的句子庫資料嗎？此操作不可撤銷，建議先匯出備份。')) {
+        sentences = [];
+        saveSentences();
+        renderAll();
+        setStatus('句子庫已全部清空。');
+      }
+    }
+
     function filteredEntries() {
       const keyword = els.searchInput.value.trim().toLowerCase();
       const category = els.filterCategory.value;
@@ -1200,7 +1253,7 @@
         if (editingSentenceId === item.id) {
           return `
             <article class="entry" style="padding: 12px 16px;">
-              <input id="editSentenceText-${item.id}" type="text" value="${escapeHtml(item.text)}" placeholder="編輯句子" style="margin-bottom:10px;" />
+              <textarea id="editSentenceText-${item.id}" class="sentence-textarea" placeholder="編輯句子" style="margin-bottom:10px;">${escapeHtml(item.text)}</textarea>
               <div class="toolbar" style="margin-top:0; justify-content: flex-end;">
                 <button type="button" class="btn-primary" data-action="save-sentence-edit" data-id="${item.id}" style="padding: 8px 14px; font-size: 13px;">儲存</button>
                 <button type="button" class="btn-light" data-action="cancel-sentence-edit" data-id="${item.id}" style="padding: 8px 14px; font-size: 13px;">取消</button>
@@ -1277,6 +1330,8 @@
     els.filterCategory.addEventListener('change', renderEntries);
     els.sentenceSearchInput.addEventListener('input', renderSentences);
     els.addSentenceBtn.addEventListener('click', addSentence);
+    els.clearAllSentencesBtn.addEventListener('click', clearAllSentences);
+    els.clearAllEntriesBtn.addEventListener('click', clearAllEntries);
     els.exportBtn.addEventListener('click', exportData);
     els.importBtn.addEventListener('click', () => els.importInput.click());
     els.importInput.addEventListener('change', importData);
