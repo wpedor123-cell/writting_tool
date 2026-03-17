@@ -657,6 +657,7 @@
     let currentReminderIndex = loadIndex(STORAGE_KEYS.reminderIndex, 0);
     let editingArticleNoteId = null;
     let editingEntryId = null;
+    let editingSentenceId = null;
 
     function exportData() {
       const data = {
@@ -981,6 +982,31 @@
       setStatus('靈感已成功更新。');
     }
 
+    function startSentenceEdit(id) {
+      editingSentenceId = id;
+      renderSentences();
+    }
+
+    function cancelSentenceEdit() {
+      editingSentenceId = null;
+      renderSentences();
+    }
+
+    function updateSentence(id) {
+      const input = document.getElementById(`editSentenceText-${id}`);
+      if (!input) return;
+      const value = input.value.trim();
+      if (!value) {
+        setStatus('句子內容不能為空。', true);
+        return;
+      }
+      sentences = sentences.map(item => item.id === id ? { ...item, text: value } : item);
+      saveSentences();
+      editingSentenceId = null;
+      renderAll();
+      setStatus('句子已更新。');
+    }
+
     function deleteEntry(id) {
       entries = entries.filter(entry => entry.id !== id);
       if (editingArticleNoteId === id) editingArticleNoteId = null;
@@ -1170,23 +1196,40 @@
         return;
       }
 
-      els.sentenceList.innerHTML = filtered.map(item => `
-        <article class="entry" style="padding: 12px 16px;">
-          <div class="entry-head" style="margin-bottom: 4px; justify-content: flex-end;">
-            <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-              ${item.favorite ? '<div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>' : ''}
+      els.sentenceList.innerHTML = filtered.map(item => {
+        if (editingSentenceId === item.id) {
+          return `
+            <article class="entry" style="padding: 12px 16px;">
+              <input id="editSentenceText-${item.id}" type="text" value="${escapeHtml(item.text)}" placeholder="編輯句子" style="margin-bottom:10px;" />
+              <div class="toolbar" style="margin-top:0; justify-content: flex-end;">
+                <button type="button" class="btn-primary" data-action="save-sentence-edit" data-id="${item.id}" style="padding: 8px 14px; font-size: 13px;">儲存</button>
+                <button type="button" class="btn-light" data-action="cancel-sentence-edit" data-id="${item.id}" style="padding: 8px 14px; font-size: 13px;">取消</button>
+              </div>
+            </article>
+          `;
+        }
+
+        return `
+          <article class="entry" style="padding: 12px 16px;">
+            <div class="entry-head" style="margin-bottom: 4px; justify-content: flex-end;">
+              <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                ${item.favorite ? '<div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>' : ''}
+              </div>
             </div>
-          </div>
-          <div class="entry-meta" style="margin-bottom: 6px;">
-            <div class="badge" style="font-size: 11px; padding: 4px 8px;">${formatDateTime(item.createdAt)}</div>
-          </div>
-          <div class="entry-content" style="margin-bottom: 10px; font-size: 14px;">${escapeHtml(item.text)}</div>
-          <div class="entry-footer" style="margin-top:0; justify-content: space-between; gap: 8px;">
-            <button type="button" class="btn-light" data-action="toggle-sentence-fav" data-id="${item.id}" style="padding: 8px 14px; font-size: 13px;">${item.favorite ? '取消收藏' : '收藏'}</button>
-            <button type="button" class="btn-danger" data-action="delete-sentence" data-id="${item.id}" style="padding: 8px 14px; font-size: 13px;">刪除</button>
-          </div>
-        </article>
-      `).join('');
+            <div class="entry-meta" style="margin-bottom: 6px;">
+              <div class="badge" style="font-size: 11px; padding: 4px 8px;">${formatDateTime(item.createdAt)}</div>
+            </div>
+            <div class="entry-content" style="margin-bottom: 10px; font-size: 14px;">${escapeHtml(item.text)}</div>
+            <div class="entry-footer" style="margin-top:0; justify-content: space-between; gap: 8px;">
+              <div style="display:flex; gap:8px;">
+                <button type="button" class="btn-light" data-action="toggle-sentence-fav" data-id="${item.id}" style="padding: 8px 14px; font-size: 13px;">${item.favorite ? '取消收藏' : '收藏'}</button>
+                <button type="button" class="btn-light" data-action="edit-sentence" data-id="${item.id}" style="padding: 8px 14px; font-size: 13px;">編輯</button>
+              </div>
+              <button type="button" class="btn-danger" data-action="delete-sentence" data-id="${item.id}" style="padding: 8px 14px; font-size: 13px;">刪除</button>
+            </div>
+          </article>
+        `;
+      }).join('');
     }
 
     function renderStats() {
@@ -1250,6 +1293,12 @@
         if (confirm('確定要刪除這句句子嗎？')) {
           deleteSentence(id);
         }
+      } else if (action === 'edit-sentence') {
+        startSentenceEdit(id);
+      } else if (action === 'save-sentence-edit') {
+        updateSentence(id);
+      } else if (action === 'cancel-sentence-edit') {
+        cancelSentenceEdit();
       }
     });
 
