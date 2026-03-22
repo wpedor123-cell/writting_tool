@@ -920,11 +920,19 @@
           discoveryDocs: [DISCOVERY_DOC],
         });
         gapiInited = true;
-        console.log('GAPI client initialized');
+        console.log('GAPI client initialized successfully');
         maybeEnableButtons();
       } catch (err) {
-        console.error('Error initializing GAPI:', err);
-        setSyncStatus('GAPI 初始化失敗', 'offline');
+        console.error('GAPI Init Detail Error:', err);
+        let errorMsg = 'GAPI 初始化失敗';
+        
+        // 嘗試從各種可能的結構中抓取錯誤訊息
+        const detail = (err?.result?.error?.message) || (err?.error?.message) || (err?.details) || (err?.message) || (JSON.stringify(err));
+        if (detail) {
+          errorMsg += ': ' + detail;
+        }
+        
+        setSyncStatus(errorMsg, 'offline');
         gapiLoadedCalled = false; // 允許重試
       }
     }
@@ -1058,8 +1066,9 @@
         renderAll();
         setSyncStatus('雲端資料已同步', 'online');
       } catch (err) {
-        console.error('Sync failed:', err);
-        setSyncStatus('雲端同步失敗', 'offline');
+        console.error('Download failed:', err);
+        const detail = (err?.result?.error?.message) || (err?.error?.message) || (err?.details) || (JSON.stringify(err));
+        setSyncStatus('雲端載入失敗: ' + detail, 'offline');
       }
     }
 
@@ -1110,7 +1119,8 @@
             setSyncStatus('請確保試算表包含 Entries 與 Sentences 分頁', 'offline');
           }
         } else {
-          setSyncStatus('雲端更新失敗', 'offline');
+          const detail = (err?.result?.error?.message) || (err?.error?.message) || (err?.details) || (JSON.stringify(err));
+          setSyncStatus('雲端更新失敗: ' + detail, 'offline');
         }
       }
     }
@@ -1184,6 +1194,7 @@
     }
 
     function normalizeEntry(entry) {
+      const now = new Date().toISOString();
       return {
         id: typeof entry?.id === 'string' ? entry.id : makeId(),
         title: typeof entry?.title === 'string' ? entry.title : '一句靈感',
@@ -1193,19 +1204,22 @@
         isArticle: Boolean(entry?.isArticle),
         favorite: Boolean(entry?.favorite),
         articleNote: typeof entry?.articleNote === 'string' ? entry.articleNote : '',
-        createdAt: typeof entry?.createdAt === 'string' ? entry.createdAt : new Date().toISOString()
+        createdAt: typeof entry?.createdAt === 'string' ? entry.createdAt : now,
+        updatedAt: typeof entry?.updatedAt === 'string' ? entry.updatedAt : (entry?.createdAt || now)
       };
     }
 
     function normalizeSentence(item) {
+      const now = new Date().toISOString();
       if (typeof item === 'string') {
-        return { id: makeId(), text: item, favorite: false, createdAt: new Date().toISOString() };
+        return { id: makeId(), text: item, favorite: false, createdAt: now, updatedAt: now };
       }
       return {
         id: typeof item?.id === 'string' ? item.id : makeId(),
         text: typeof item?.text === 'string' ? item.text : '',
         favorite: Boolean(item?.favorite),
-        createdAt: typeof item?.createdAt === 'string' ? item.createdAt : new Date().toISOString()
+        createdAt: typeof item?.createdAt === 'string' ? item.createdAt : now,
+        updatedAt: typeof item?.updatedAt === 'string' ? item.updatedAt : (item?.createdAt || now)
       };
     }
 
@@ -1233,80 +1247,165 @@
       }
     }
 
-    function saveEntries() {
+    function saveEntriesLocally() {
       localStorage.setItem(STORAGE_KEYS.entries, JSON.stringify(entries));
+    }
+
+    function saveSentencesLocally() {
+      localStorage.setItem(STORAGE_KEYS.sentences, JSON.stringify(sentences));
+    }
+
+    function saveEntries() {
+      saveEntriesLocally();
       if (isAuthorized) syncDataToCloud();
     }
 
     function saveSentences() {
-      localStorage.setItem(STORAGE_KEYS.sentences, JSON.stringify(sentences));
+      saveSentencesLocally();
       if (isAuthorized) syncDataToCloud();
     }
 
-    function loadIndex(key, fallback) {
-      const value = Number(localStorage.getItem(key));
-      return Number.isInteger(value) ? value : fallback;
+    async function syncDataFromCloud() {
+      if (!isAuthorized) return;
+      setSyncStatus('正在從雲端同步...', 'syncing');
+      try {
+        const response = await gapi.client.sheets.spreadsheets.get({
+          spreadsheetId: SPREADSHEET_ID,
+          includeGridData: true,
+        });
+
+        const sheetEntries = response.result.sheets.find(s => s.properties.title === 'Entries');
+        const sheetSentences = response.result.sheets.find(s => s.properties.title === 'Sentences');
+
+        // --- 同步 Entries ---
+        if (sheetEntries) {
+          const rows = sheetEntries.data[0].rowData;
+          const cloudEntries = [];
+          if (rows && rows.length > 1) {
+            rows.slice(1).forEach(row => {
+              const vals = row.values || [];
+              const ent = normalizeEntry({
+                id: vals[0]?.formattedValue || '',
+                title: vals[1]?.formattedValue || '',
+                category: vals[2]?.formattedValue || '',
+                content: vals[3]?.formattedValue || '',
+                mood: vals[4]?.formattedValue || '',
+                isArticle: vals[5]?.formattedValue === 'TRUE',
+                favorite: vals[6]?.formattedValue === 'TRUE',
+                articleNote: vals[7]?.formattedValue || '',
+                createdAt: vals[8]?.formattedValue || '',
+                updatedAt: vals[9]?.formattedValue || vals[8]?.formattedValue || ''
+              });
+              if (ent.id) cloudEntries.push(ent);
+            });
+          }
+          
+          const localMap = new Map(entries.map(e => [e.id, e]));
+          cloudEntries.forEach(cloudEnt => {
+            const localEnt = localMap.get(cloudEnt.id);
+            if (!localEnt || new Date(cloudEnt.updatedAt) >= new Date(localEnt.updatedAt)) {
+              localMap.set(cloudEnt.id, cloudEnt);
+            }
+          });
+          entries = Array.from(localMap.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        }
+
+        // --- 同步 Sentences ---
+        if (sheetSentences) {
+          const rows = sheetSentences.data[0].rowData;
+          const cloudSentences = [];
+          if (rows && rows.length > 1) {
+            rows.slice(1).forEach(row => {
+              const vals = row.values || [];
+              const sent = normalizeSentence({
+                id: vals[0]?.formattedValue || '',
+                text: vals[1]?.formattedValue || '',
+                favorite: vals[2]?.formattedValue === 'TRUE',
+                createdAt: vals[3]?.formattedValue || '',
+                updatedAt: vals[4]?.formattedValue || vals[3]?.formattedValue || ''
+              });
+              if (sent.id) cloudSentences.push(sent);
+            });
+          }
+          const localMap = new Map(sentences.map(s => [s.id, s]));
+          cloudSentences.forEach(cloudSent => {
+            const localSent = localMap.get(cloudSent.id);
+            if (!localSent || new Date(cloudSent.updatedAt) >= new Date(localSent.updatedAt)) {
+              localMap.set(cloudSent.id, cloudSent);
+            }
+          });
+          sentences = Array.from(localMap.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        }
+
+        saveEntriesLocally(); 
+        saveSentencesLocally();
+        renderAll();
+        
+        await syncDataToCloudInternal();
+        
+        const timeStr = new Date().toLocaleTimeString();
+        setSyncStatus('同步完成 ' + timeStr, 'online');
+      } catch (err) {
+        console.error('Download failed:', err);
+        const detail = (err?.result?.error?.message) || (err?.error?.message) || (err?.details) || (JSON.stringify(err));
+        setSyncStatus('同步失敗: ' + detail, 'offline');
+      }
     }
 
-    function saveIndex(key, value) {
-      localStorage.setItem(key, String(value));
+    async function syncDataToCloudInternal() {
+      const entryRows = [
+        ['id', 'title', 'category', 'content', 'mood', 'isArticle', 'favorite', 'articleNote', 'createdAt', 'updatedAt'],
+        ...entries.map(e => [e.id, e.title, e.category, e.content, e.mood, e.isArticle ? 'TRUE' : 'FALSE', e.favorite ? 'TRUE' : 'FALSE', e.articleNote, e.createdAt, e.updatedAt])
+      ];
+
+      const sentenceRows = [
+        ['id', 'text', 'favorite', 'createdAt', 'updatedAt'],
+        ...sentences.map(s => [s.id, s.text, s.favorite ? 'TRUE' : 'FALSE', s.createdAt, s.updatedAt])
+      ];
+
+      await gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'Entries!A1',
+        valueInputOption: 'RAW',
+        resource: { values: entryRows }
+      });
+
+      await gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'Sentences!A1',
+        valueInputOption: 'RAW',
+        resource: { values: sentenceRows }
+      });
     }
 
-    function escapeHtml(text) {
-      return String(text)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    function linkify(text) {
-      const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
-      return text.replace(urlPattern, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: var(--primary-dark); text-decoration: underline; word-break: break-all;">$1</a>');
-    }
-
-    function formatDateTime(isoString) {
-      const date = new Date(isoString);
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, '0');
-      const d = String(date.getDate()).padStart(2, '0');
-      const hh = String(date.getHours()).padStart(2, '0');
-      const mm = String(date.getMinutes()).padStart(2, '0');
-      return `${y}/${m}/${d} ${hh}:${mm}`;
-    }
-
-    function getTodayKey() {
-      const now = new Date();
-      const y = now.getFullYear();
-      const m = String(now.getMonth() + 1).padStart(2, '0');
-      const d = String(now.getDate()).padStart(2, '0');
-      return `${y}-${m}-${d}`;
-    }
-
-    function setStatus(message, isError = false) {
-      els.saveStatus.textContent = message;
-      els.saveStatus.style.color = isError ? 'var(--danger)' : 'var(--subtext)';
-    }
-
-    function rotatePrompt() {
-      currentPromptIndex = (currentPromptIndex + 1) % prompts.length;
-      saveIndex(STORAGE_KEYS.promptIndex, currentPromptIndex);
-      els.promptText.textContent = prompts[currentPromptIndex];
-    }
-
-    function rotateReminder() {
-      currentReminderIndex = (currentReminderIndex + 1) % reminders.length;
-      saveIndex(STORAGE_KEYS.reminderIndex, currentReminderIndex);
-      els.dailyReminder.textContent = reminders[currentReminderIndex];
-    }
-
-    function clearForm() {
-      els.titleInput.value = '';
-      els.contentInput.value = '';
-      els.moodInput.value = '';
-      els.categoryInput.value = '';
-      setStatus('已清空輸入，可以重新記錄新的靈感。');
+    async function syncDataToCloud() {
+      if (!isAuthorized) return;
+      setSyncStatus('正在同步至雲端...', 'syncing');
+      try {
+        await syncDataToCloudInternal();
+        setSyncStatus('雲端已同步', 'online');
+      } catch (err) {
+        console.error('Upload failed:', err);
+        if (err.status === 400) {
+          try {
+            await gapi.client.sheets.spreadsheets.batchUpdate({
+              spreadsheetId: SPREADSHEET_ID,
+              resource: {
+                requests: [
+                  { addSheet: { properties: { title: 'Entries' } } },
+                  { addSheet: { properties: { title: 'Sentences' } } }
+                ]
+              }
+            });
+            await syncDataToCloud();
+          } catch (createErr) {
+            setSyncStatus('請確保試算表包含 Entries 與 Sentences 分頁', 'offline');
+          }
+        } else {
+          const detail = (err?.result?.error?.message) || (err?.error?.message) || (err?.details) || (JSON.stringify(err));
+          setSyncStatus('雲端更新失敗: ' + detail, 'offline');
+        }
+      }
     }
 
     function saveEntry() {
@@ -1324,6 +1423,7 @@
       const firstLine = lines.length ? lines[0].slice(0, 18) : '';
       const finalTitle = title || firstLine || '一句靈感';
 
+      const now = new Date().toISOString();
       const entry = normalizeEntry({
         id: makeId(),
         title: finalTitle,
@@ -1333,7 +1433,8 @@
         isArticle: false,
         favorite: false,
         articleNote: '',
-        createdAt: new Date().toISOString()
+        createdAt: now,
+        updatedAt: now
       });
 
       entries.unshift(entry);
@@ -1345,67 +1446,50 @@
     function addSentence() {
       const value = els.sentenceOnlyInput.value.trim();
       if (!value) return;
-      sentences.unshift(normalizeSentence({ id: makeId(), text: value, favorite: false, createdAt: new Date().toISOString() }));
+      const now = new Date().toISOString();
+      sentences.unshift(normalizeSentence({ id: makeId(), text: value, favorite: false, createdAt: now, updatedAt: now }));
       saveSentences();
       els.sentenceOnlyInput.value = '';
       renderAll();
     }
 
     function toggleFavorite(id) {
-      entries = entries.map(entry => entry.id === id ? { ...entry, favorite: !entry.favorite } : entry);
+      const now = new Date().toISOString();
+      entries = entries.map(entry => entry.id === id ? { ...entry, favorite: !entry.favorite, updatedAt: now } : entry);
       saveEntries();
       renderAll();
     }
 
     function toggleSentenceFavorite(id) {
-      sentences = sentences.map(item => item.id === id ? { ...item, favorite: !item.favorite } : item);
+      const now = new Date().toISOString();
+      sentences = sentences.map(item => item.id === id ? { ...item, favorite: !item.favorite, updatedAt: now } : item);
       saveSentences();
       renderAll();
     }
 
     function toggleArticleStatus(id) {
       let becameArticle = false;
+      const now = new Date().toISOString();
       entries = entries.map(entry => {
         if (entry.id !== id) return entry;
         becameArticle = !entry.isArticle;
-        return { ...entry, isArticle: !entry.isArticle };
+        return { ...entry, isArticle: !entry.isArticle, updatedAt: now };
       });
       saveEntries();
       renderAll();
       setStatus(becameArticle ? '' : '已取消文章標記。');
     }
 
-    function startArticleNoteEdit(id) {
-      editingArticleNoteId = id;
-      renderEntries();
-      setStatus('你可以直接在卡片裡寫文章備註。');
-    }
-
-    function cancelArticleNoteEdit() {
-      editingArticleNoteId = null;
-      renderEntries();
-      setStatus('已取消編輯文章備註。');
-    }
-
     function saveArticleNote(id) {
       const input = document.getElementById(`articleNoteInput-${id}`);
       if (!input) return;
       const value = input.value.trim();
-      entries = entries.map(entry => entry.id === id ? { ...entry, articleNote: value } : entry);
+      const now = new Date().toISOString();
+      entries = entries.map(entry => entry.id === id ? { ...entry, articleNote: value, updatedAt: now } : entry);
       saveEntries();
       editingArticleNoteId = null;
       renderAll();
       setStatus(value ? '已更新文章備註。' : '已清除文章備註。');
-    }
-
-    function startEntryEdit(id) {
-      editingEntryId = id;
-      renderEntries();
-    }
-
-    function cancelEntryEdit() {
-      editingEntryId = null;
-      renderEntries();
     }
 
     function updateEntry(id) {
@@ -1419,6 +1503,7 @@
         return;
       }
 
+      const now = new Date().toISOString();
       entries = entries.map(entry => {
         if (entry.id !== id) return entry;
         const lines = content ? content.split(/\r?\n/) : [];
@@ -1430,7 +1515,8 @@
           title: finalTitle,
           category,
           content,
-          mood
+          mood,
+          updatedAt: now
         };
       });
 
@@ -1438,16 +1524,6 @@
       editingEntryId = null;
       renderAll();
       setStatus('靈感已成功更新。');
-    }
-
-    function startSentenceEdit(id) {
-      editingSentenceId = id;
-      renderSentences();
-    }
-
-    function cancelSentenceEdit() {
-      editingSentenceId = null;
-      renderSentences();
     }
 
     function updateSentence(id) {
@@ -1458,7 +1534,8 @@
         setStatus('句子內容不能為空。', true);
         return;
       }
-      sentences = sentences.map(item => item.id === id ? { ...item, text: value } : item);
+      const now = new Date().toISOString();
+      sentences = sentences.map(item => item.id === id ? { ...item, text: value, updatedAt: now } : item);
       saveSentences();
       editingSentenceId = null;
       renderAll();
