@@ -412,6 +412,92 @@
     .p-6 { order: 6; }
     .p-7 { order: 7; }
 
+    /* Google Sync 樣式 */
+    .sync-panel {
+      background: #eef2f7;
+      border: 1px solid #d1d9e6;
+      border-radius: var(--radius-md);
+      padding: 12px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .sync-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--subtext);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ccc;
+    }
+
+    .status-dot.online { background: #4caf50; }
+    .status-dot.offline { background: #f44336; }
+    .status-dot.syncing { background: #2196f3; animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .settings-toggle {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--subtext);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+
+    .settings-panel {
+      display: none;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .settings-panel.active { display: block; }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .settings-grid .full { grid-column: span 2; }
+
+    .settings-panel label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--subtext);
+    }
+
+    .settings-panel input {
+      font-family: monospace;
+      font-size: 13px;
+    }
+
+    .auth-btns {
+      display: flex;
+      gap: 10px;
+    }
+
     @media (max-width: 980px) {
       .layout {
         flex-direction: column;
@@ -452,6 +538,44 @@
         <button class="btn-soft" id="refreshReminderBtn" type="button">換一句提醒</button>
       </div>
     </section>
+
+    <!-- Google Sheets Sync Panel -->
+    <div class="sync-panel" id="syncStatusRow">
+      <div class="sync-status">
+        <div id="statusDot" class="status-dot"></div>
+        <span id="syncText">Google 同步未啟用</span>
+      </div>
+      <div class="auth-btns">
+        <button id="authorizeBtn" class="btn-primary" style="padding: 8px 16px; font-size: 13px; display: none;">Google 登入同步</button>
+        <button id="signoutBtn" class="btn-light" style="padding: 8px 16px; font-size: 13px; display: none;">登出</button>
+        <button id="syncNowBtn" class="btn-success" style="padding: 8px 16px; font-size: 13px; display: none;">立即同步</button>
+        <button id="toggleSettingsBtn" class="settings-toggle">設定雲端憑證</button>
+      </div>
+    </div>
+
+    <!-- Settings Panel (Hidden by Default) -->
+    <div class="settings-panel" id="settingsPanel">
+      <h2 style="margin-top: 0; font-size: 18px;">雲端同步設定</h2>
+      <div class="sub">你需要建立一個 Google Cloud 專案並啟用 Sheets API。</div>
+      <div class="settings-grid">
+        <div class="full">
+          <label for="googleClientId">OAuth 2.0 Client ID</label>
+          <input type="password" id="googleClientId" placeholder="xxxxxxxxxxxx.apps.googleusercontent.com" />
+        </div>
+        <div class="full">
+          <label for="googleApiKey">Google API Key</label>
+          <input type="password" id="googleApiKey" placeholder="AIzaSy..." />
+        </div>
+        <div class="full">
+          <label for="googleSheetId">Google Spreadsheet ID</label>
+          <input type="text" id="googleSheetId" placeholder="1abc123..." />
+        </div>
+      </div>
+      <div class="toolbar" style="margin-top: 20px;">
+        <button id="saveSettingsBtn" class="btn-primary">儲存設定並套用</button>
+        <button id="clearSettingsBtn" class="btn-danger">清除設定</button>
+      </div>
+    </div>
 
     <div class="layout">
       <!-- 左欄容器：負責存放第 1, 3, 5, 7 個區塊 -->
@@ -603,8 +727,21 @@
       entries: 'writing_inspiration_entries_v1',
       sentences: 'writing_inspiration_sentences_v1',
       reminderIndex: 'writing_inspiration_reminder_index_v1',
-      promptIndex: 'writing_inspiration_prompt_index_v1'
+      promptIndex: 'writing_inspiration_prompt_index_v1',
+      googleSettings: 'writing_inspiration_google_settings_v1'
     };
+
+    // Google API Configuration
+    let CLIENT_ID = '';
+    let API_KEY = '';
+    let SPREADSHEET_ID = '';
+    const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+    const DISCOVERY_DOC = 'https://sheets.googleapis.com/$discovery/rest?version=v4';
+
+    let tokenClient;
+    let gapiInited = false;
+    let gisInited = false;
+    let isAuthorized = false;
 
     const prompts = [
       '描寫一個日常中被忽略的小動作，並讓它帶出一種情緒。',
@@ -684,7 +821,20 @@
       clearAllEntriesBtn: document.getElementById('clearAllEntriesBtn'),
       exportBtn: document.getElementById('exportBtn'),
       importBtn: document.getElementById('importBtn'),
-      importInput: document.getElementById('importInput')
+      importInput: document.getElementById('importInput'),
+      // Google Sync Elements
+      syncText: document.getElementById('syncText'),
+      statusDot: document.getElementById('statusDot'),
+      authorizeBtn: document.getElementById('authorizeBtn'),
+      signoutBtn: document.getElementById('signoutBtn'),
+      syncNowBtn: document.getElementById('syncNowBtn'),
+      toggleSettingsBtn: document.getElementById('toggleSettingsBtn'),
+      settingsPanel: document.getElementById('settingsPanel'),
+      googleClientId: document.getElementById('googleClientId'),
+      googleApiKey: document.getElementById('googleApiKey'),
+      googleSheetId: document.getElementById('googleSheetId'),
+      saveSettingsBtn: document.getElementById('saveSettingsBtn'),
+      clearSettingsBtn: document.getElementById('clearSettingsBtn')
     };
 
     let entries = loadEntries();
@@ -694,6 +844,276 @@
     let editingArticleNoteId = null;
     let editingEntryId = null;
     let editingSentenceId = null;
+
+    // --- Google API Integration ---
+
+    function loadGoogleSettings() {
+      const raw = localStorage.getItem(STORAGE_KEYS.googleSettings);
+      if (raw) {
+        const settings = JSON.parse(raw);
+        CLIENT_ID = settings.clientId || '';
+        API_KEY = settings.apiKey || '';
+        SPREADSHEET_ID = settings.sheetId || '';
+        els.googleClientId.value = CLIENT_ID;
+        els.googleApiKey.value = API_KEY;
+        els.googleSheetId.value = SPREADSHEET_ID;
+      }
+    }
+
+    function saveGoogleSettings() {
+      const settings = {
+        clientId: els.googleClientId.value.trim(),
+        apiKey: els.googleApiKey.value.trim(),
+        sheetId: els.googleSheetId.value.trim()
+      };
+      if (!settings.clientId || !settings.apiKey || !settings.sheetId) {
+        alert('請填寫完整的 Client ID, API Key 與 Sheet ID');
+        return;
+      }
+      localStorage.setItem(STORAGE_KEYS.googleSettings, JSON.stringify(settings));
+      CLIENT_ID = settings.clientId;
+      API_KEY = settings.apiKey;
+      SPREADSHEET_ID = settings.sheetId;
+      els.settingsPanel.classList.remove('active');
+      alert('設定已儲存，請重新整理頁面以套用變更。');
+      location.reload();
+    }
+
+    function clearGoogleSettings() {
+      if (confirm('確定要清除所有雲端設定嗎？')) {
+        localStorage.removeItem(STORAGE_KEYS.googleSettings);
+        location.reload();
+      }
+    }
+
+    let gapiLoadedCalled = false;
+    let gisLoadedCalled = false;
+
+    function loadGoogleSettings() {
+      const raw = localStorage.getItem(STORAGE_KEYS.googleSettings);
+      if (raw) {
+        const settings = JSON.parse(raw);
+        CLIENT_ID = settings.clientId || '';
+        API_KEY = settings.apiKey || '';
+        SPREADSHEET_ID = settings.sheetId || '';
+        els.googleClientId.value = CLIENT_ID;
+        els.googleApiKey.value = API_KEY;
+        els.googleSheetId.value = SPREADSHEET_ID;
+        
+        // 若腳本已載入，手動觸發初始化
+        if (typeof gapi !== 'undefined' && API_KEY) gapiLoaded();
+        if (typeof google !== 'undefined' && CLIENT_ID) gisLoaded();
+      }
+    }
+
+    function gapiLoaded() {
+      if (gapiLoadedCalled || !API_KEY) return;
+      gapiLoadedCalled = true;
+      console.log('GAPI script loading client...');
+      gapi.load('client', initializeGapiClient);
+    }
+
+    async function initializeGapiClient() {
+      try {
+        await gapi.client.init({
+          apiKey: API_KEY,
+          discoveryDocs: [DISCOVERY_DOC],
+        });
+        gapiInited = true;
+        console.log('GAPI client initialized');
+        maybeEnableButtons();
+      } catch (err) {
+        console.error('Error initializing GAPI:', err);
+        setSyncStatus('GAPI 初始化失敗', 'offline');
+        gapiLoadedCalled = false; // 允許重試
+      }
+    }
+
+    function gisLoaded() {
+      if (gisLoadedCalled || !CLIENT_ID) return;
+      gisLoadedCalled = true;
+      console.log('GIS script initializing...');
+      try {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: CLIENT_ID,
+          scope: SCOPES,
+          callback: (resp) => {
+            if (resp.error !== undefined) throw (resp);
+            isAuthorized = true;
+            updateSigninStatus();
+            syncDataFromCloud();
+          },
+        });
+        gisInited = true;
+        console.log('GIS client initialized');
+        maybeEnableButtons();
+      } catch (err) {
+        console.error('Error initializing GIS:', err);
+        gisLoadedCalled = false; // 允許重試
+      }
+    }
+
+    function maybeEnableButtons() {
+      if (gapiInited && gisInited) {
+        updateSigninStatus();
+      }
+    }
+
+    function setSyncStatus(text, type) {
+      els.syncText.textContent = text;
+      els.statusDot.className = 'status-dot ' + type;
+    }
+
+    async function handleAuthClick() {
+      if (!tokenClient) {
+        alert('Google 認證尚未初始化，請檢查 Client ID 是否正確。');
+        return;
+      }
+      if (gapi.client.getToken() === null) {
+        tokenClient.requestAccessToken({ prompt: 'consent' });
+      } else {
+        tokenClient.requestAccessToken({ prompt: '' });
+      }
+    }
+
+    function handleSignoutClick() {
+      const token = gapi.client.getToken();
+      if (token !== null) {
+        google.accounts.oauth2.revoke(token.access_token);
+        gapi.client.setToken(null);
+        isAuthorized = false;
+        updateSigninStatus();
+      }
+    }
+
+    function updateSigninStatus() {
+      if (isAuthorized) {
+        els.authorizeBtn.style.display = 'none';
+        els.signoutBtn.style.display = 'inline-block';
+        els.syncNowBtn.style.display = 'inline-block';
+        setSyncStatus('雲端已連線', 'online');
+      } else {
+        els.authorizeBtn.style.display = 'inline-block';
+        els.signoutBtn.style.display = 'none';
+        els.syncNowBtn.style.display = 'none';
+        setSyncStatus('Google 同步未啟用', 'offline');
+      }
+    }
+
+    async function syncDataFromCloud() {
+      if (!isAuthorized) return;
+      setSyncStatus('正在從雲端載入...', 'syncing');
+      try {
+        const response = await gapi.client.sheets.spreadsheets.get({
+          spreadsheetId: SPREADSHEET_ID,
+          includeGridData: true,
+        });
+
+        const sheetEntries = response.result.sheets.find(s => s.properties.title === 'Entries');
+        const sheetSentences = response.result.sheets.find(s => s.properties.title === 'Sentences');
+
+        if (sheetEntries) {
+          const rows = sheetEntries.data[0].rowData;
+          if (rows && rows.length > 1) {
+            const cloudEntries = rows.slice(1).map(row => {
+              const vals = row.values || [];
+              return normalizeEntry({
+                id: vals[0]?.formattedValue || makeId(),
+                title: vals[1]?.formattedValue || '',
+                category: vals[2]?.formattedValue || '',
+                content: vals[3]?.formattedValue || '',
+                mood: vals[4]?.formattedValue || '',
+                isArticle: vals[5]?.formattedValue === 'TRUE',
+                favorite: vals[6]?.formattedValue === 'TRUE',
+                articleNote: vals[7]?.formattedValue || '',
+                createdAt: vals[8]?.formattedValue || new Date().toISOString()
+              });
+            });
+            const localMap = new Map(entries.map(e => [e.id, e]));
+            cloudEntries.forEach(e => localMap.set(e.id, e));
+            entries = Array.from(localMap.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          }
+        }
+
+        if (sheetSentences) {
+          const rows = sheetSentences.data[0].rowData;
+          if (rows && rows.length > 1) {
+            const cloudSentences = rows.slice(1).map(row => {
+              const vals = row.values || [];
+              return normalizeSentence({
+                id: vals[0]?.formattedValue || makeId(),
+                text: vals[1]?.formattedValue || '',
+                favorite: vals[2]?.formattedValue === 'TRUE',
+                createdAt: vals[3]?.formattedValue || new Date().toISOString()
+              });
+            });
+            const localMap = new Map(sentences.map(s => [s.id, s]));
+            cloudSentences.forEach(s => localMap.set(s.id, s));
+            sentences = Array.from(localMap.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          }
+        }
+
+        saveEntries();
+        saveSentences();
+        renderAll();
+        setSyncStatus('雲端資料已同步', 'online');
+      } catch (err) {
+        console.error('Sync failed:', err);
+        setSyncStatus('雲端同步失敗', 'offline');
+      }
+    }
+
+    async function syncDataToCloud() {
+      if (!isAuthorized) return;
+      setSyncStatus('正在同步至雲端...', 'syncing');
+      try {
+        const entryRows = [
+          ['id', 'title', 'category', 'content', 'mood', 'isArticle', 'favorite', 'articleNote', 'createdAt'],
+          ...entries.map(e => [e.id, e.title, e.category, e.content, e.mood, e.isArticle ? 'TRUE' : 'FALSE', e.favorite ? 'TRUE' : 'FALSE', e.articleNote, e.createdAt])
+        ];
+
+        const sentenceRows = [
+          ['id', 'text', 'favorite', 'createdAt'],
+          ...sentences.map(s => [s.id, s.text, s.favorite ? 'TRUE' : 'FALSE', s.createdAt])
+        ];
+
+        await gapi.client.sheets.spreadsheets.values.update({
+          spreadsheetId: SPREADSHEET_ID,
+          range: 'Entries!A1',
+          valueInputOption: 'RAW',
+          resource: { values: entryRows }
+        });
+
+        await gapi.client.sheets.spreadsheets.values.update({
+          spreadsheetId: SPREADSHEET_ID,
+          range: 'Sentences!A1',
+          valueInputOption: 'RAW',
+          resource: { values: sentenceRows }
+        });
+
+        setSyncStatus('雲端已同步', 'online');
+      } catch (err) {
+        console.error('Upload failed:', err);
+        if (err.status === 400) {
+          try {
+            await gapi.client.sheets.spreadsheets.batchUpdate({
+              spreadsheetId: SPREADSHEET_ID,
+              resource: {
+                requests: [
+                  { addSheet: { properties: { title: 'Entries' } } },
+                  { addSheet: { properties: { title: 'Sentences' } } }
+                ]
+              }
+            });
+            await syncDataToCloud();
+          } catch (createErr) {
+            setSyncStatus('請確保試算表包含 Entries 與 Sentences 分頁', 'offline');
+          }
+        } else {
+          setSyncStatus('雲端更新失敗', 'offline');
+        }
+      }
+    }
 
     function exportData() {
       const data = {
@@ -815,10 +1235,12 @@
 
     function saveEntries() {
       localStorage.setItem(STORAGE_KEYS.entries, JSON.stringify(entries));
+      if (isAuthorized) syncDataToCloud();
     }
 
     function saveSentences() {
       localStorage.setItem(STORAGE_KEYS.sentences, JSON.stringify(sentences));
+      if (isAuthorized) syncDataToCloud();
     }
 
     function loadIndex(key, fallback) {
@@ -1337,6 +1759,18 @@
     els.importBtn.addEventListener('click', () => els.importInput.click());
     els.importInput.addEventListener('change', importData);
 
+    // Google Sync Event Listeners
+    els.authorizeBtn.addEventListener('click', handleAuthClick);
+    els.signoutBtn.addEventListener('click', handleSignoutClick);
+    els.syncNowBtn.addEventListener('click', syncDataToCloud);
+    els.toggleSettingsBtn.addEventListener('click', () => {
+      els.settingsPanel.classList.toggle('active');
+    });
+    els.saveSettingsBtn.addEventListener('click', saveGoogleSettings);
+    els.clearSettingsBtn.addEventListener('click', clearGoogleSettings);
+
+    loadGoogleSettings();
+
     els.sentenceList.addEventListener('click', (event) => {
       const button = event.target.closest('button[data-action]');
       if (!button) return;
@@ -1404,5 +1838,7 @@
     runSelfTests();
     renderAll();
   </script>
+  <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+  <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
 </body>
 </html>
