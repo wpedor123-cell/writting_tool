@@ -742,55 +742,11 @@
     let gapiInited = false;
     let gisInited = false;
     let isAuthorized = false;
+    let gapiLoadedCalled = false;
+    let gisLoadedCalled = false;
 
-    const prompts = [
-      '描寫一個日常中被忽略的小動作，並讓它帶出一種情緒。',
-      '寫下一個你今天觀察到的細節，然後問自己：它為什麼讓我記住？',
-      '用三句話寫一個沒有說出口的想念。',
-      '把一場夢中的畫面寫下來，不需要解釋，只保留氣氛。',
-      '描寫一個人表面平靜，但其實心裡有波動的瞬間。',
-      '從一句對白開始，讓一個故事慢慢出現。',
-      '寫一個「原來如此」的時刻，讓它像頓悟一樣落下。',
-      '記錄今天最安靜的一刻，試著讓讀者也站進那個畫面。',
-      '把一種身體感受寫成文字，例如鼻酸、手心冒汗、腿很酸。',
-      '寫一個你以為不重要，回頭看卻很有意義的小事。',
-      '描寫一個你想靠近卻不敢太靠近的人，不要直接說喜歡。',
-      '選一個物件當主角，讓它替人保管秘密。'
-    ];
-
-    const reminders = [
-      '有些作品不是想很久才誕生，而是先寫下一句，世界才慢慢長出來。',
-      '今天不用逼自己寫得完整，只要誠實記下一個瞬間就夠了。',
-      '靈感很輕，先接住它，之後再慢慢雕刻。',
-      '你記下的不是零碎，而是未來作品的種子。',
-      '有時候，一句話就是整篇作品最早的心跳。',
-      '不用急著證明自己會寫，要先相信自己有感受。',
-      '創作不是每次都要盛大，有時只是一個安靜的發現。',
-      '當你願意看見細節，故事就會自己靠近你。',
-      '不要急著判斷好不好，先把它寫下來再說。',
-      '很多作品其實只是從一個小觀察開始。',
-      '你今天注意到的細節，也許就是一篇作品的開頭。',
-      '一句簡單的記錄，可能會在未來長成一段故事。',
-      '創作有時不是想出來，而是慢慢發現的。',
-      '有感覺的地方通常藏著一個故事。',
-      '當一句話讓你停下來，它就值得被記住。',
-      '靈感通常很小聲，所以要先把它寫下來。',
-      '有很多好的作品，其實只是誠實的觀察。',
-      '有些畫面當下很普通，但寫下來就不一樣了。',
-      '創作不是每天都有高潮，但每天都可以留下痕跡。',
-      '先寫下來，再慢慢理解它的意義。',
-      '有些想法當下很模糊，但未來會變清楚。',
-      '不需要等到完美的句子，只要先記住那不完整的一句。',
-      '當你願意停下來觀察，靈感就會出現。',
-      '有時候最好的素材，其實就已經在日常裡了。',
-      '創作不一定要宏大，一個瞬間就夠了。',
-      '你看到的世界，和別人其實不一樣。',
-      '很多故事都藏在很小的細節裡。',
-      '有些句子只是提醒你：這裡有東西值得寫。',
-      '好好傾聽自己內心的聲音。',
-      '好好保護自己內在的感性。',
-      '先留下線索，未來再把故事補上。'
-    ];
+    const prompts = ['描寫一個日常中被忽略的小動作，並讓它帶出一種情緒。','寫下一個你今天觀察到的細節，然後問自己：它為什麼讓我記住？','用三句話寫一個沒有說出口的想念。','把一場夢中的畫面寫下來，不需要解釋，只保留氣氛。','描寫一個人表面平靜，但其實心裡有波動的瞬間。','從一句對白開始，讓一個故事慢慢出現。','寫一個「原來如此」的時刻，讓它像頓悟一樣落下。','記錄今天最安靜的一刻，試著讓讀者也站進那個畫面。','把一種身體感受寫成文字，例如鼻酸、手心冒汗、腿很酸。','寫一個你以為不重要，回頭看卻很有意義的小事。','描寫一個你想靠近卻不敢太靠近的人，不要直接說喜歡。','選一個物件當主角，讓它替人保管秘密。'];
+    const reminders = ['有些作品不是想很久才誕生，而是先寫下一句，世界才慢慢長出來。','今天不用逼自己寫得完整，只要誠實記下一個瞬間就夠了。','靈感很輕，先接住它，之後再慢慢雕刻。','你記下的不是零碎，而是未來作品的種子。','有時候，一句話就是整篇作品最早的心跳。','不用急著證明自己會寫，要先相信自己有感受。','創作不是每次都要盛大，有時只是一個安靜的發現。','當你願意看見細節，故事就會自己靠近你。','不要急著判斷好不好，先把它寫下來再說。','很多作品其實只是從一個小觀察開始。','你今天注意到的細節，也許就是一篇作品的開頭。','一句簡單的記錄，可能會在未來長成一段故事。','創作有時不是想出來，而是慢慢發現的。','有感覺的地方通常藏著一個故事。','當一句話讓你停下來，它就值得被記住。','靈感通常很小聲，所以要先把它寫下來。','有很多好的作品，其實只是誠實的觀察。','有些畫面當下很普通，但寫下來就不一樣了。','創作不是每天都有高潮，但每天都可以留下痕跡。','先寫下來，再慢慢理解它的意義。','有些想法當下很模糊，但未來會變清楚。','不需要等到完美的句子，只要先記住那不完整的一句。','當你願意停下來觀察，靈感就會出現。','有時候最好的素材，其實就已經在日常裡了。','創作不一定要宏大，一個瞬間就夠了。','你看到的世界，和別人其實不一樣。','很多故事都藏在很小的細節裡。','有些句子只是提醒你：這裡有東西值得寫。','好好傾聽自己內心的聲音。','好好保護自己內在的感性。','先留下線索，未來再把故事補上。'];
 
     const els = {
       titleInput: document.getElementById('titleInput'),
@@ -822,7 +778,6 @@
       exportBtn: document.getElementById('exportBtn'),
       importBtn: document.getElementById('importBtn'),
       importInput: document.getElementById('importInput'),
-      // Google Sync Elements
       syncText: document.getElementById('syncText'),
       statusDot: document.getElementById('statusDot'),
       authorizeBtn: document.getElementById('authorizeBtn'),
@@ -837,16 +792,6 @@
       clearSettingsBtn: document.getElementById('clearSettingsBtn')
     };
 
-    let entries = loadEntries();
-    let sentences = loadSentences();
-    let currentPromptIndex = loadIndex(STORAGE_KEYS.promptIndex, 0);
-    let currentReminderIndex = loadIndex(STORAGE_KEYS.reminderIndex, 0);
-    let editingArticleNoteId = null;
-    let editingEntryId = null;
-    let editingSentenceId = null;
-
-    // --- Google API Integration ---
-
     function loadGoogleSettings() {
       const raw = localStorage.getItem(STORAGE_KEYS.googleSettings);
       if (raw) {
@@ -857,6 +802,8 @@
         els.googleClientId.value = CLIENT_ID;
         els.googleApiKey.value = API_KEY;
         els.googleSheetId.value = SPREADSHEET_ID;
+        if (typeof gapi !== 'undefined' && API_KEY) gapiLoaded();
+        if (typeof google !== 'undefined' && CLIENT_ID) gisLoaded();
       }
     }
 
@@ -871,11 +818,6 @@
         return;
       }
       localStorage.setItem(STORAGE_KEYS.googleSettings, JSON.stringify(settings));
-      CLIENT_ID = settings.clientId;
-      API_KEY = settings.apiKey;
-      SPREADSHEET_ID = settings.sheetId;
-      els.settingsPanel.classList.remove('active');
-      alert('設定已儲存，請重新整理頁面以套用變更。');
       location.reload();
     }
 
@@ -886,61 +828,28 @@
       }
     }
 
-    let gapiLoadedCalled = false;
-    let gisLoadedCalled = false;
-
-    function loadGoogleSettings() {
-      const raw = localStorage.getItem(STORAGE_KEYS.googleSettings);
-      if (raw) {
-        const settings = JSON.parse(raw);
-        CLIENT_ID = settings.clientId || '';
-        API_KEY = settings.apiKey || '';
-        SPREADSHEET_ID = settings.sheetId || '';
-        els.googleClientId.value = CLIENT_ID;
-        els.googleApiKey.value = API_KEY;
-        els.googleSheetId.value = SPREADSHEET_ID;
-        
-        // 若腳本已載入，手動觸發初始化
-        if (typeof gapi !== 'undefined' && API_KEY) gapiLoaded();
-        if (typeof google !== 'undefined' && CLIENT_ID) gisLoaded();
-      }
-    }
-
     function gapiLoaded() {
       if (gapiLoadedCalled || !API_KEY) return;
       gapiLoadedCalled = true;
-      console.log('GAPI script loading client...');
       gapi.load('client', initializeGapiClient);
     }
 
     async function initializeGapiClient() {
       try {
-        await gapi.client.init({
-          apiKey: API_KEY,
-          discoveryDocs: [DISCOVERY_DOC],
-        });
+        await gapi.client.init({ apiKey: API_KEY, discoveryDocs: [DISCOVERY_DOC] });
         gapiInited = true;
-        console.log('GAPI client initialized successfully');
         maybeEnableButtons();
       } catch (err) {
-        console.error('GAPI Init Detail Error:', err);
-        let errorMsg = 'GAPI 初始化失敗';
-        
-        // 嘗試從各種可能的結構中抓取錯誤訊息
-        const detail = (err?.result?.error?.message) || (err?.error?.message) || (err?.details) || (err?.message) || (JSON.stringify(err));
-        if (detail) {
-          errorMsg += ': ' + detail;
-        }
-        
-        setSyncStatus(errorMsg, 'offline');
-        gapiLoadedCalled = false; // 允許重試
+        console.error('GAPI Init Error:', err);
+        const detail = (err?.result?.error?.message) || (err?.error?.message) || (JSON.stringify(err));
+        setSyncStatus('GAPI 初始化失敗: ' + detail, 'offline');
+        gapiLoadedCalled = false;
       }
     }
 
     function gisLoaded() {
       if (gisLoadedCalled || !CLIENT_ID) return;
       gisLoadedCalled = true;
-      console.log('GIS script initializing...');
       try {
         tokenClient = google.accounts.oauth2.initTokenClient({
           client_id: CLIENT_ID,
@@ -953,18 +862,15 @@
           },
         });
         gisInited = true;
-        console.log('GIS client initialized');
         maybeEnableButtons();
       } catch (err) {
-        console.error('Error initializing GIS:', err);
-        gisLoadedCalled = false; // 允許重試
+        console.error('GIS Init Error:', err);
+        gisLoadedCalled = false;
       }
     }
 
     function maybeEnableButtons() {
-      if (gapiInited && gisInited) {
-        updateSigninStatus();
-      }
+      if (gapiInited && gisInited) updateSigninStatus();
     }
 
     function setSyncStatus(text, type) {
@@ -1008,187 +914,6 @@
       }
     }
 
-    async function syncDataFromCloud() {
-      if (!isAuthorized) return;
-      setSyncStatus('正在從雲端載入...', 'syncing');
-      try {
-        const response = await gapi.client.sheets.spreadsheets.get({
-          spreadsheetId: SPREADSHEET_ID,
-          includeGridData: true,
-        });
-
-        const sheetEntries = response.result.sheets.find(s => s.properties.title === 'Entries');
-        const sheetSentences = response.result.sheets.find(s => s.properties.title === 'Sentences');
-
-        if (sheetEntries) {
-          const rows = sheetEntries.data[0].rowData;
-          if (rows && rows.length > 1) {
-            const cloudEntries = rows.slice(1).map(row => {
-              const vals = row.values || [];
-              return normalizeEntry({
-                id: vals[0]?.formattedValue || makeId(),
-                title: vals[1]?.formattedValue || '',
-                category: vals[2]?.formattedValue || '',
-                content: vals[3]?.formattedValue || '',
-                mood: vals[4]?.formattedValue || '',
-                isArticle: vals[5]?.formattedValue === 'TRUE',
-                favorite: vals[6]?.formattedValue === 'TRUE',
-                articleNote: vals[7]?.formattedValue || '',
-                createdAt: vals[8]?.formattedValue || new Date().toISOString()
-              });
-            });
-            const localMap = new Map(entries.map(e => [e.id, e]));
-            cloudEntries.forEach(e => localMap.set(e.id, e));
-            entries = Array.from(localMap.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-          }
-        }
-
-        if (sheetSentences) {
-          const rows = sheetSentences.data[0].rowData;
-          if (rows && rows.length > 1) {
-            const cloudSentences = rows.slice(1).map(row => {
-              const vals = row.values || [];
-              return normalizeSentence({
-                id: vals[0]?.formattedValue || makeId(),
-                text: vals[1]?.formattedValue || '',
-                favorite: vals[2]?.formattedValue === 'TRUE',
-                createdAt: vals[3]?.formattedValue || new Date().toISOString()
-              });
-            });
-            const localMap = new Map(sentences.map(s => [s.id, s]));
-            cloudSentences.forEach(s => localMap.set(s.id, s));
-            sentences = Array.from(localMap.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-          }
-        }
-
-        saveEntries();
-        saveSentences();
-        renderAll();
-        setSyncStatus('雲端資料已同步', 'online');
-      } catch (err) {
-        console.error('Download failed:', err);
-        const detail = (err?.result?.error?.message) || (err?.error?.message) || (err?.details) || (JSON.stringify(err));
-        setSyncStatus('雲端載入失敗: ' + detail, 'offline');
-      }
-    }
-
-    async function syncDataToCloud() {
-      if (!isAuthorized) return;
-      setSyncStatus('正在同步至雲端...', 'syncing');
-      try {
-        const entryRows = [
-          ['id', 'title', 'category', 'content', 'mood', 'isArticle', 'favorite', 'articleNote', 'createdAt'],
-          ...entries.map(e => [e.id, e.title, e.category, e.content, e.mood, e.isArticle ? 'TRUE' : 'FALSE', e.favorite ? 'TRUE' : 'FALSE', e.articleNote, e.createdAt])
-        ];
-
-        const sentenceRows = [
-          ['id', 'text', 'favorite', 'createdAt'],
-          ...sentences.map(s => [s.id, s.text, s.favorite ? 'TRUE' : 'FALSE', s.createdAt])
-        ];
-
-        await gapi.client.sheets.spreadsheets.values.update({
-          spreadsheetId: SPREADSHEET_ID,
-          range: 'Entries!A1',
-          valueInputOption: 'RAW',
-          resource: { values: entryRows }
-        });
-
-        await gapi.client.sheets.spreadsheets.values.update({
-          spreadsheetId: SPREADSHEET_ID,
-          range: 'Sentences!A1',
-          valueInputOption: 'RAW',
-          resource: { values: sentenceRows }
-        });
-
-        setSyncStatus('雲端已同步', 'online');
-      } catch (err) {
-        console.error('Upload failed:', err);
-        if (err.status === 400) {
-          try {
-            await gapi.client.sheets.spreadsheets.batchUpdate({
-              spreadsheetId: SPREADSHEET_ID,
-              resource: {
-                requests: [
-                  { addSheet: { properties: { title: 'Entries' } } },
-                  { addSheet: { properties: { title: 'Sentences' } } }
-                ]
-              }
-            });
-            await syncDataToCloud();
-          } catch (createErr) {
-            setSyncStatus('請確保試算表包含 Entries 與 Sentences 分頁', 'offline');
-          }
-        } else {
-          const detail = (err?.result?.error?.message) || (err?.error?.message) || (err?.details) || (JSON.stringify(err));
-          setSyncStatus('雲端更新失敗: ' + detail, 'offline');
-        }
-      }
-    }
-
-    function exportData() {
-      const data = {
-        entries: entries,
-        sentences: sentences,
-        version: 'v1',
-        exportedAt: new Date().toISOString()
-      };
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'text/plain;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      const dateStr = getTodayKey();
-      a.download = `靈感簿備份_${dateStr}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      setStatus('資料已成功匯出為 .txt 備份檔案。');
-    }
-
-    function importData(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      if (!confirm('確定要將匯入的資料附加到目前的靈感與句子庫中嗎？')) {
-        event.target.value = '';
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const content = e.target.result;
-          const parsed = JSON.parse(content);
-          
-          if (parsed && Array.isArray(parsed.entries) && Array.isArray(parsed.sentences)) {
-            const newEntries = parsed.entries.map(normalizeEntry);
-            const newSentences = parsed.sentences.map(normalizeSentence);
-
-            const existingEntryIds = new Set(entries.map(ent => ent.id));
-            const filteredNewEntries = newEntries.filter(ent => !existingEntryIds.has(ent.id));
-
-            const existingSentenceIds = new Set(sentences.map(sent => sent.id));
-            const filteredNewSentences = newSentences.filter(sent => !existingSentenceIds.has(sent.id));
-
-            entries = [...entries, ...filteredNewEntries];
-            sentences = [...sentences, ...filteredNewSentences];
-
-            saveEntries();
-            saveSentences();
-            renderAll();
-            setStatus(`資料匯入成功！已附加 ${filteredNewEntries.length} 則靈感與 ${filteredNewSentences.length} 句句子。`);
-          } else {
-            throw new Error('不正確的檔案格式');
-          }
-        } catch (err) {
-          console.error('Import failed:', err);
-          setStatus('匯入失敗：請確保檔案格式正確且未損壞。', true);
-        }
-        event.target.value = '';
-      };
-      reader.readAsText(file);
-    }
-
     function makeId() {
       return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
     }
@@ -1211,9 +936,7 @@
 
     function normalizeSentence(item) {
       const now = new Date().toISOString();
-      if (typeof item === 'string') {
-        return { id: makeId(), text: item, favorite: false, createdAt: now, updatedAt: now };
-      }
+      if (typeof item === 'string') return { id: makeId(), text: item, favorite: false, createdAt: now, updatedAt: now };
       return {
         id: typeof item?.id === 'string' ? item.id : makeId(),
         text: typeof item?.text === 'string' ? item.text : '',
@@ -1226,694 +949,271 @@
     function loadEntries() {
       try {
         const raw = localStorage.getItem(STORAGE_KEYS.entries);
-        if (!raw) return [];
-        const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed.map(normalizeEntry) : [];
-      } catch (error) {
-        console.error('Failed to load entries:', error);
-        return [];
-      }
+        return Array.isArray(JSON.parse(raw)) ? JSON.parse(raw).map(normalizeEntry) : [];
+      } catch (e) { return []; }
     }
 
     function loadSentences() {
       try {
         const raw = localStorage.getItem(STORAGE_KEYS.sentences);
-        if (!raw) return [];
-        const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed.map(normalizeSentence).filter(item => item.text) : [];
-      } catch (error) {
-        console.error('Failed to load sentences:', error);
-        return [];
-      }
+        return Array.isArray(JSON.parse(raw)) ? JSON.parse(raw).map(normalizeSentence).filter(i => i.text) : [];
+      } catch (e) { return []; }
     }
 
-    function saveEntriesLocally() {
-      localStorage.setItem(STORAGE_KEYS.entries, JSON.stringify(entries));
-    }
-
-    function saveSentencesLocally() {
-      localStorage.setItem(STORAGE_KEYS.sentences, JSON.stringify(sentences));
-    }
-
-    function saveEntries() {
-      saveEntriesLocally();
-      if (isAuthorized) syncDataToCloud();
-    }
-
-    function saveSentences() {
-      saveSentencesLocally();
-      if (isAuthorized) syncDataToCloud();
-    }
+    function saveEntriesLocally() { localStorage.setItem(STORAGE_KEYS.entries, JSON.stringify(entries)); }
+    function saveSentencesLocally() { localStorage.setItem(STORAGE_KEYS.sentences, JSON.stringify(sentences)); }
+    function saveEntries() { saveEntriesLocally(); if (isAuthorized) syncDataToCloud(); }
+    function saveSentences() { saveSentencesLocally(); if (isAuthorized) syncDataToCloud(); }
 
     async function syncDataFromCloud() {
       if (!isAuthorized) return;
       setSyncStatus('正在從雲端同步...', 'syncing');
       try {
-        const response = await gapi.client.sheets.spreadsheets.get({
-          spreadsheetId: SPREADSHEET_ID,
-          includeGridData: true,
-        });
-
+        const response = await gapi.client.sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID, includeGridData: true });
         const sheetEntries = response.result.sheets.find(s => s.properties.title === 'Entries');
         const sheetSentences = response.result.sheets.find(s => s.properties.title === 'Sentences');
 
-        // --- 同步 Entries ---
         if (sheetEntries) {
           const rows = sheetEntries.data[0].rowData;
           const cloudEntries = [];
           if (rows && rows.length > 1) {
             rows.slice(1).forEach(row => {
-              const vals = row.values || [];
+              const v = row.values || [];
               const ent = normalizeEntry({
-                id: vals[0]?.formattedValue || '',
-                title: vals[1]?.formattedValue || '',
-                category: vals[2]?.formattedValue || '',
-                content: vals[3]?.formattedValue || '',
-                mood: vals[4]?.formattedValue || '',
-                isArticle: vals[5]?.formattedValue === 'TRUE',
-                favorite: vals[6]?.formattedValue === 'TRUE',
-                articleNote: vals[7]?.formattedValue || '',
-                createdAt: vals[8]?.formattedValue || '',
-                updatedAt: vals[9]?.formattedValue || vals[8]?.formattedValue || ''
+                id: v[0]?.formattedValue || '',
+                title: v[1]?.formattedValue || '',
+                category: v[2]?.formattedValue || '',
+                content: v[3]?.formattedValue || '',
+                mood: v[4]?.formattedValue || '',
+                isArticle: v[5]?.formattedValue === 'TRUE',
+                favorite: v[6]?.formattedValue === 'TRUE',
+                articleNote: v[7]?.formattedValue || '',
+                createdAt: v[8]?.formattedValue || '',
+                updatedAt: v[9]?.formattedValue || v[8]?.formattedValue || ''
               });
               if (ent.id) cloudEntries.push(ent);
             });
           }
-          
           const localMap = new Map(entries.map(e => [e.id, e]));
-          cloudEntries.forEach(cloudEnt => {
-            const localEnt = localMap.get(cloudEnt.id);
-            if (!localEnt || new Date(cloudEnt.updatedAt) >= new Date(localEnt.updatedAt)) {
-              localMap.set(cloudEnt.id, cloudEnt);
-            }
+          cloudEntries.forEach(ce => {
+            const le = localMap.get(ce.id);
+            if (!le || new Date(ce.updatedAt) >= new Date(le.updatedAt)) localMap.set(ce.id, ce);
           });
           entries = Array.from(localMap.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         }
 
-        // --- 同步 Sentences ---
         if (sheetSentences) {
           const rows = sheetSentences.data[0].rowData;
           const cloudSentences = [];
           if (rows && rows.length > 1) {
             rows.slice(1).forEach(row => {
-              const vals = row.values || [];
+              const v = row.values || [];
               const sent = normalizeSentence({
-                id: vals[0]?.formattedValue || '',
-                text: vals[1]?.formattedValue || '',
-                favorite: vals[2]?.formattedValue === 'TRUE',
-                createdAt: vals[3]?.formattedValue || '',
-                updatedAt: vals[4]?.formattedValue || vals[3]?.formattedValue || ''
+                id: v[0]?.formattedValue || '',
+                text: v[1]?.formattedValue || '',
+                favorite: v[2]?.formattedValue === 'TRUE',
+                createdAt: v[3]?.formattedValue || '',
+                updatedAt: v[4]?.formattedValue || v[3]?.formattedValue || ''
               });
               if (sent.id) cloudSentences.push(sent);
             });
           }
           const localMap = new Map(sentences.map(s => [s.id, s]));
-          cloudSentences.forEach(cloudSent => {
-            const localSent = localMap.get(cloudSent.id);
-            if (!localSent || new Date(cloudSent.updatedAt) >= new Date(localSent.updatedAt)) {
-              localMap.set(cloudSent.id, cloudSent);
-            }
+          cloudSentences.forEach(cs => {
+            const ls = localMap.get(cs.id);
+            if (!ls || new Date(cs.updatedAt) >= new Date(ls.updatedAt)) localMap.set(cs.id, cs);
           });
           sentences = Array.from(localMap.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         }
 
-        saveEntriesLocally(); 
-        saveSentencesLocally();
-        renderAll();
-        
+        saveEntriesLocally(); saveSentencesLocally(); renderAll();
         await syncDataToCloudInternal();
-        
-        const timeStr = new Date().toLocaleTimeString();
-        setSyncStatus('同步完成 ' + timeStr, 'online');
+        setSyncStatus('同步完成 ' + new Date().toLocaleTimeString(), 'online');
       } catch (err) {
         console.error('Download failed:', err);
-        const detail = (err?.result?.error?.message) || (err?.error?.message) || (err?.details) || (JSON.stringify(err));
+        const detail = (err?.result?.error?.message) || (err?.error?.message) || (JSON.stringify(err));
         setSyncStatus('同步失敗: ' + detail, 'offline');
       }
     }
 
     async function syncDataToCloudInternal() {
-      const entryRows = [
-        ['id', 'title', 'category', 'content', 'mood', 'isArticle', 'favorite', 'articleNote', 'createdAt', 'updatedAt'],
-        ...entries.map(e => [e.id, e.title, e.category, e.content, e.mood, e.isArticle ? 'TRUE' : 'FALSE', e.favorite ? 'TRUE' : 'FALSE', e.articleNote, e.createdAt, e.updatedAt])
-      ];
-
-      const sentenceRows = [
-        ['id', 'text', 'favorite', 'createdAt', 'updatedAt'],
-        ...sentences.map(s => [s.id, s.text, s.favorite ? 'TRUE' : 'FALSE', s.createdAt, s.updatedAt])
-      ];
-
-      await gapi.client.sheets.spreadsheets.values.update({
-        spreadsheetId: SPREADSHEET_ID,
-        range: 'Entries!A1',
-        valueInputOption: 'RAW',
-        resource: { values: entryRows }
-      });
-
-      await gapi.client.sheets.spreadsheets.values.update({
-        spreadsheetId: SPREADSHEET_ID,
-        range: 'Sentences!A1',
-        valueInputOption: 'RAW',
-        resource: { values: sentenceRows }
-      });
+      const entryRows = [['id', 'title', 'category', 'content', 'mood', 'isArticle', 'favorite', 'articleNote', 'createdAt', 'updatedAt'], ...entries.map(e => [e.id, e.title, e.category, e.content, e.mood, e.isArticle ? 'TRUE' : 'FALSE', e.favorite ? 'TRUE' : 'FALSE', e.articleNote, e.createdAt, e.updatedAt])];
+      const sentenceRows = [['id', 'text', 'favorite', 'createdAt', 'updatedAt'], ...sentences.map(s => [s.id, s.text, s.favorite ? 'TRUE' : 'FALSE', s.createdAt, s.updatedAt])];
+      await gapi.client.sheets.spreadsheets.values.update({ spreadsheetId: SPREADSHEET_ID, range: 'Entries!A1', valueInputOption: 'RAW', resource: { values: entryRows } });
+      await gapi.client.sheets.spreadsheets.values.update({ spreadsheetId: SPREADSHEET_ID, range: 'Sentences!A1', valueInputOption: 'RAW', resource: { values: sentenceRows } });
     }
 
     async function syncDataToCloud() {
       if (!isAuthorized) return;
       setSyncStatus('正在同步至雲端...', 'syncing');
-      try {
-        await syncDataToCloudInternal();
-        setSyncStatus('雲端已同步', 'online');
-      } catch (err) {
-        console.error('Upload failed:', err);
+      try { await syncDataToCloudInternal(); setSyncStatus('雲端已同步', 'online'); }
+      catch (err) {
         if (err.status === 400) {
           try {
-            await gapi.client.sheets.spreadsheets.batchUpdate({
-              spreadsheetId: SPREADSHEET_ID,
-              resource: {
-                requests: [
-                  { addSheet: { properties: { title: 'Entries' } } },
-                  { addSheet: { properties: { title: 'Sentences' } } }
-                ]
-              }
-            });
+            await gapi.client.sheets.spreadsheets.batchUpdate({ spreadsheetId: SPREADSHEET_ID, resource: { requests: [{ addSheet: { properties: { title: 'Entries' } } }, { addSheet: { properties: { title: 'Sentences' } } }] } });
             await syncDataToCloud();
-          } catch (createErr) {
-            setSyncStatus('請確保試算表包含 Entries 與 Sentences 分頁', 'offline');
-          }
+          } catch (e) { setSyncStatus('請確保試算表包含 Entries 與 Sentences 分頁', 'offline'); }
         } else {
-          const detail = (err?.result?.error?.message) || (err?.error?.message) || (err?.details) || (JSON.stringify(err));
+          const detail = (err?.result?.error?.message) || (err?.error?.message) || (JSON.stringify(err));
           setSyncStatus('雲端更新失敗: ' + detail, 'offline');
         }
       }
     }
 
+    function exportData() {
+      const data = { entries, sentences, version: 'v1', exportedAt: new Date().toISOString() };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = `靈感簿備份_${getTodayKey()}.txt`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+      setStatus('資料已成功匯出為 .txt 備份檔案。');
+    }
+
+    function importData(event) {
+      const file = event.target.files[0]; if (!file) return;
+      if (!confirm('確定要將匯入的資料附加到目前的靈感與句子庫中嗎？')) { event.target.value = ''; return; }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (parsed && Array.isArray(parsed.entries) && Array.isArray(parsed.sentences)) {
+            const newEntries = parsed.entries.map(normalizeEntry);
+            const newSentences = parsed.sentences.map(normalizeSentence);
+            const existingEntryIds = new Set(entries.map(ent => ent.id));
+            const filteredNewEntries = newEntries.filter(ent => !existingEntryIds.has(ent.id));
+            const existingSentenceIds = new Set(sentences.map(sent => sent.id));
+            const filteredNewSentences = newSentences.filter(sent => !existingSentenceIds.has(sent.id));
+            entries = [...entries, ...filteredNewEntries]; sentences = [...sentences, ...filteredNewSentences];
+            saveEntries(); saveSentences(); renderAll();
+            setStatus(`資料匯入成功！已附加 ${filteredNewEntries.length} 則靈感與 ${filteredNewSentences.length} 句句子。`);
+          }
+        } catch (err) { setStatus('匯入失敗：請確保檔案格式正確。', true); }
+        event.target.value = '';
+      };
+      reader.readAsText(file);
+    }
+
+    function loadIndex(key, f) { const v = Number(localStorage.getItem(key)); return Number.isInteger(v) ? v : f; }
+    function saveIndex(key, v) { localStorage.setItem(key, String(v)); }
+    function escapeHtml(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); }
+    function linkify(t) { return t.replace(/(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: var(--primary-dark); text-decoration: underline; word-break: break-all;">$1</a>'); }
+    function formatDateTime(iso) { const d = new Date(iso); return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+    function getTodayKey() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+    function setStatus(m, e=false) { els.saveStatus.textContent = m; els.saveStatus.style.color = e ? 'var(--danger)' : 'var(--subtext)'; }
+    function rotatePrompt() { currentPromptIndex = (currentPromptIndex + 1) % prompts.length; saveIndex(STORAGE_KEYS.promptIndex, currentPromptIndex); els.promptText.textContent = prompts[currentPromptIndex]; }
+    function rotateReminder() { currentReminderIndex = (currentReminderIndex + 1) % reminders.length; saveIndex(STORAGE_KEYS.reminderIndex, currentReminderIndex); els.dailyReminder.textContent = reminders[currentReminderIndex]; }
+    function clearForm() { els.titleInput.value = ''; els.contentInput.value = ''; els.moodInput.value = ''; els.categoryInput.value = ''; setStatus('已清空輸入，可以重新記錄新的靈感。'); }
+
     function saveEntry() {
-      const title = els.titleInput.value.trim();
-      const category = els.categoryInput.value.trim();
-      const content = els.contentInput.value.trim();
-      const mood = els.moodInput.value.trim();
-
-      if (!title && !content) {
-        setStatus('至少輸入內容或標題再存檔喔。', true);
-        return;
-      }
-
+      const title = els.titleInput.value.trim(), category = els.categoryInput.value.trim(), content = els.contentInput.value.trim(), mood = els.moodInput.value.trim();
+      if (!title && !content) { setStatus('至少輸入內容或標題再存檔喔。', true); return; }
       const lines = content ? content.split(/\r?\n/) : [];
       const firstLine = lines.length ? lines[0].slice(0, 18) : '';
-      const finalTitle = title || firstLine || '一句靈感';
-
       const now = new Date().toISOString();
-      const entry = normalizeEntry({
-        id: makeId(),
-        title: finalTitle,
-        category,
-        content,
-        mood,
-        isArticle: false,
-        favorite: false,
-        articleNote: '',
-        createdAt: now,
-        updatedAt: now
-      });
-
-      entries.unshift(entry);
-      saveEntries();
-      renderAll();
-      clearForm();
+      const entry = normalizeEntry({ id: makeId(), title: title || firstLine || '一句靈感', category, content, mood, isArticle: false, favorite: false, articleNote: '', createdAt: now, updatedAt: now });
+      entries.unshift(entry); saveEntries(); renderAll(); clearForm();
     }
 
     function addSentence() {
-      const value = els.sentenceOnlyInput.value.trim();
-      if (!value) return;
+      const v = els.sentenceOnlyInput.value.trim(); if (!v) return;
       const now = new Date().toISOString();
-      sentences.unshift(normalizeSentence({ id: makeId(), text: value, favorite: false, createdAt: now, updatedAt: now }));
-      saveSentences();
-      els.sentenceOnlyInput.value = '';
-      renderAll();
+      sentences.unshift(normalizeSentence({ id: makeId(), text: v, favorite: false, createdAt: now, updatedAt: now }));
+      saveSentences(); els.sentenceOnlyInput.value = ''; renderAll();
     }
 
-    function toggleFavorite(id) {
-      const now = new Date().toISOString();
-      entries = entries.map(entry => entry.id === id ? { ...entry, favorite: !entry.favorite, updatedAt: now } : entry);
-      saveEntries();
-      renderAll();
-    }
+    let entries = loadEntries();
+    let sentences = loadSentences();
+    let currentPromptIndex = loadIndex(STORAGE_KEYS.promptIndex, 0);
+    let currentReminderIndex = loadIndex(STORAGE_KEYS.reminderIndex, 0);
+    let editingArticleNoteId = null;
+    let editingEntryId = null;
+    let editingSentenceId = null;
 
-    function toggleSentenceFavorite(id) {
-      const now = new Date().toISOString();
-      sentences = sentences.map(item => item.id === id ? { ...item, favorite: !item.favorite, updatedAt: now } : item);
-      saveSentences();
-      renderAll();
-    }
-
-    function toggleArticleStatus(id) {
-      let becameArticle = false;
-      const now = new Date().toISOString();
-      entries = entries.map(entry => {
-        if (entry.id !== id) return entry;
-        becameArticle = !entry.isArticle;
-        return { ...entry, isArticle: !entry.isArticle, updatedAt: now };
-      });
-      saveEntries();
-      renderAll();
-      setStatus(becameArticle ? '' : '已取消文章標記。');
-    }
-
-    function saveArticleNote(id) {
-      const input = document.getElementById(`articleNoteInput-${id}`);
-      if (!input) return;
-      const value = input.value.trim();
-      const now = new Date().toISOString();
-      entries = entries.map(entry => entry.id === id ? { ...entry, articleNote: value, updatedAt: now } : entry);
-      saveEntries();
-      editingArticleNoteId = null;
-      renderAll();
-      setStatus(value ? '已更新文章備註。' : '已清除文章備註。');
-    }
-
+    function toggleFavorite(id) { const now = new Date().toISOString(); entries = entries.map(e => e.id === id ? { ...e, favorite: !e.favorite, updatedAt: now } : e); saveEntries(); renderAll(); }
+    function toggleSentenceFavorite(id) { const now = new Date().toISOString(); sentences = sentences.map(s => s.id === id ? { ...s, favorite: !s.favorite, updatedAt: now } : s); saveSentences(); renderAll(); }
+    function toggleArticleStatus(id) { let became = false; const now = new Date().toISOString(); entries = entries.map(e => { if (e.id !== id) return e; became = !e.isArticle; return { ...e, isArticle: !e.isArticle, updatedAt: now }; }); saveEntries(); renderAll(); setStatus(became ? '' : '已取消文章標記。'); }
+    function saveArticleNote(id) { const v = document.getElementById(`articleNoteInput-${id}`).value.trim(); const now = new Date().toISOString(); entries = entries.map(e => e.id === id ? { ...e, articleNote: v, updatedAt: now } : e); saveEntries(); editingArticleNoteId = null; renderAll(); setStatus(v ? '已更新文章備註。' : '已清除文章備註。'); }
+    function startArticleNoteEdit(id) { editingArticleNoteId = id; renderEntries(); setSyncStatus('編輯文章備註...', 'online'); }
+    function cancelArticleNoteEdit() { editingArticleNoteId = null; renderEntries(); }
+    function startEntryEdit(id) { editingEntryId = id; renderEntries(); }
+    function cancelEntryEdit() { editingEntryId = null; renderEntries(); }
+    
     function updateEntry(id) {
-      const title = document.getElementById(`editTitle-${id}`).value.trim();
-      const category = document.getElementById(`editCategory-${id}`).value;
-      const content = document.getElementById(`editContent-${id}`).value.trim();
-      const mood = document.getElementById(`editMood-${id}`).value.trim();
-
-      if (!title && !content) {
-        setStatus('標題或內容不能同時為空。', true);
-        return;
-      }
-
+      const t = document.getElementById(`editTitle-${id}`).value.trim(), c = document.getElementById(`editCategory-${id}`).value, cont = document.getElementById(`editContent-${id}`).value.trim(), m = document.getElementById(`editMood-${id}`).value.trim();
+      if (!t && !cont) { setStatus('標題或內容不能同時為空。', true); return; }
       const now = new Date().toISOString();
-      entries = entries.map(entry => {
-        if (entry.id !== id) return entry;
-        const lines = content ? content.split(/\r?\n/) : [];
-        const firstLine = lines.length ? lines[0].slice(0, 18) : '';
-        const finalTitle = title || firstLine || '一句靈感';
-        
-        return {
-          ...entry,
-          title: finalTitle,
-          category,
-          content,
-          mood,
-          updatedAt: now
-        };
-      });
-
-      saveEntries();
-      editingEntryId = null;
-      renderAll();
-      setStatus('靈感已成功更新。');
+      entries = entries.map(e => { if (e.id !== id) return e; return { ...e, title: t || (cont ? cont.split(/\r?\n/)[0].slice(0,18) : '一句靈感'), category: c, content: cont, mood: m, updatedAt: now }; });
+      saveEntries(); editingEntryId = null; renderAll(); setStatus('靈感已成功更新。');
     }
-
+    
+    function startSentenceEdit(id) { editingSentenceId = id; renderSentences(); }
+    function cancelSentenceEdit() { editingSentenceId = null; renderSentences(); }
     function updateSentence(id) {
-      const input = document.getElementById(`editSentenceText-${id}`);
-      if (!input) return;
-      const value = input.value.trim();
-      if (!value) {
-        setStatus('句子內容不能為空。', true);
-        return;
-      }
+      const v = document.getElementById(`editSentenceText-${id}`).value.trim(); if (!v) { setStatus('句子內容不能為空。', true); return; }
       const now = new Date().toISOString();
-      sentences = sentences.map(item => item.id === id ? { ...item, text: value, updatedAt: now } : item);
-      saveSentences();
-      editingSentenceId = null;
-      renderAll();
-      setStatus('句子已更新。');
+      sentences = sentences.map(s => s.id === id ? { ...s, text: v, updatedAt: now } : s);
+      saveSentences(); editingSentenceId = null; renderAll(); setStatus('句子已更新。');
     }
-
-    function deleteEntry(id) {
-      entries = entries.filter(entry => entry.id !== id);
-      if (editingArticleNoteId === id) editingArticleNoteId = null;
-      saveEntries();
-      renderAll();
-    }
-
-    function deleteSentence(id) {
-      sentences = sentences.filter(item => item.id !== id);
-      saveSentences();
-      renderAll();
-    }
-
-    function clearAllEntries() {
-      if (confirm('確定要清空全部的靈感庫資料嗎？此操作不可撤銷，建議先匯出備份。')) {
-        entries = [];
-        saveEntries();
-        renderAll();
-        setStatus('靈感庫已全部清空。');
-      }
-    }
-
-    function clearAllSentences() {
-      if (confirm('確定要清空全部的句子庫資料嗎？此操作不可撤銷，建議先匯出備份。')) {
-        sentences = [];
-        saveSentences();
-        renderAll();
-        setStatus('句子庫已全部清空。');
-      }
-    }
-
-    function filteredEntries() {
-      const keyword = els.searchInput.value.trim().toLowerCase();
-      const category = els.filterCategory.value;
-      return entries.filter(entry => {
-        const matchesCategory = category === '全部' || entry.category === category;
-        const blob = [entry.title, entry.content, entry.mood, entry.category, entry.articleNote].join(' ').toLowerCase();
-        return matchesCategory && (!keyword || blob.includes(keyword));
-      });
-    }
-
-    function favoriteCardsMarkup() {
-      const favoriteEntries = entries.filter(entry => entry.favorite);
-      const favoriteSentences = sentences.filter(item => item.favorite);
-      const cards = [];
-
-      for (const item of favoriteSentences) {
-        cards.push(`
-          <article class="entry" style="padding: 12px 16px;">
-            <div class="entry-head" style="justify-content:flex-end; margin-bottom:0;">
-              <div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>
-            </div>
-            <div class="entry-meta">
-              <div class="badge">${formatDateTime(item.createdAt)}</div>
-            </div>
-            <div class="entry-content">${escapeHtml(item.text)}</div>
-          </article>
-        `);
-      }
-
-      for (const item of favoriteEntries) {
-        cards.push(`
-          <article class="entry">
-            <div class="entry-head">
-              <div class="entry-title">${escapeHtml(item.title)}</div>
-              <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-                <div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>
-                ${item.category ? `<div class="badge">${escapeHtml(item.category)}</div>` : ''}
-                ${item.isArticle ? '<div class="badge" style="background:#e7f4ea; color:#4f7a59;">已成文章</div>' : ''}
-              </div>
-            </div>
-            <div class="entry-meta">
-              <div class="badge">${formatDateTime(item.createdAt)}</div>
-              ${item.mood ? `<div class="badge">心情：${escapeHtml(item.mood)}</div>` : ''}
-            </div>
-            ${item.content ? `<div class="entry-content">${escapeHtml(item.content)}</div>` : ''}
-          </article>
-        `);
-      }
-
-      return cards;
+    
+    function deleteEntry(id) { entries = entries.filter(e => e.id !== id); if (editingArticleNoteId === id) editingArticleNoteId = null; saveEntries(); renderAll(); }
+    function deleteSentence(id) { sentences = sentences.filter(s => s.id !== id); saveSentences(); renderAll(); }
+    
+    function filteredEntries() { 
+      const k = els.searchInput.value.trim().toLowerCase(), c = els.filterCategory.value; 
+      return entries.filter(e => { const mc = c === '全部' || e.category === c; const blob = [e.title, e.content, e.mood, e.category, e.articleNote].join(' ').toLowerCase(); return mc && (!k || blob.includes(k)); }); 
     }
 
     function renderFavorites() {
-      const cards = favoriteCardsMarkup();
-      els.favoriteList.innerHTML = cards.length
-        ? cards.join('')
-        : '<div class="empty">目前還沒有收藏的靈感或句子。</div>';
+      const fe = entries.filter(e => e.favorite), fs = sentences.filter(s => s.favorite);
+      let html = '';
+      fs.forEach(s => html += `<article class="entry" style="padding: 12px 16px;"><div class="entry-head" style="justify-content:flex-end; margin-bottom:0;"><div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div></div><div class="entry-meta"><div class="badge">${formatDateTime(s.createdAt)}</div></div><div class="entry-content">${escapeHtml(s.text)}</div></article>`);
+      fe.forEach(e => html += `<article class="entry"><div class="entry-head"><div class="entry-title">${escapeHtml(e.title)}</div><div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;"><div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>${e.category?`<div class="badge">${escapeHtml(e.category)}</div>`:''}${e.isArticle?'<div class="badge" style="background:#e7f4ea; color:#4f7a59;">已成文章</div>':''}</div></div><div class="entry-meta"><div class="badge">${formatDateTime(e.createdAt)}</div>${e.mood?`<div class="badge">心情：${escapeHtml(e.mood)}</div>`:''}</div>${e.content?`<div class="entry-content">${escapeHtml(e.content)}</div>`:''}</article>`);
+      els.favoriteList.innerHTML = html || '<div class="empty">目前還沒有收藏。</div>';
     }
 
     function renderArticles() {
-      const articles = entries.filter(entry => entry.isArticle);
-      if (!articles.length) {
-        els.articleList.innerHTML = '<div class="empty">目前還沒有已成文章的靈感。</div>';
-        return;
-      }
-
-      els.articleList.innerHTML = articles.map(entry => `
-        <article class="entry">
-          <div class="entry-head">
-            <div class="entry-title">${escapeHtml(entry.title)}</div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-              ${entry.favorite ? '<div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>' : ''}
-              ${entry.category ? `<div class="badge">${escapeHtml(entry.category)}</div>` : ''}
-              <div class="badge" style="background:#e7f4ea;color:#4f7a59;">文章</div>
-            </div>
-          </div>
-          <div class="entry-meta">
-            <div class="badge">${formatDateTime(entry.createdAt)}</div>
-            ${entry.mood ? `<div class="badge">心情：${escapeHtml(entry.mood)}</div>` : ''}
-          </div>
-          ${entry.content ? `<div class="entry-content">${escapeHtml(entry.content)}</div>` : ''}
-          ${entry.articleNote ? `<div class="article-note">${linkify(escapeHtml(entry.articleNote))}</div>` : ''}
-        </article>
-      `).join('');
+      const a = entries.filter(e => e.isArticle);
+      els.articleList.innerHTML = a.length ? a.map(e => `<article class="entry"><div class="entry-head"><div class="entry-title">${escapeHtml(e.title)}</div><div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">${e.favorite?'<div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>':''}${e.category?`<div class="badge">${escapeHtml(e.category)}</div>`:''}<div class="badge" style="background:#e7f4ea;color:#4f7a59;">文章</div></div></div><div class="entry-meta"><div class="badge">${formatDateTime(e.createdAt)}</div>${e.mood?`<div class="badge">心情：${escapeHtml(e.mood)}</div>`:''}</div>${e.content?`<div class="entry-content">${escapeHtml(e.content)}</div>`:''}${e.articleNote?`<div class="article-note">${linkify(escapeHtml(e.articleNote))}</div>`:''}</article>`).join('') : '<div class="empty">目前還沒有文章。</div>';
     }
 
     function renderEntries() {
       const list = filteredEntries();
-      if (!list.length) {
-        els.entryList.innerHTML = '<div class="empty">目前還沒有符合條件的靈感。<br>你可以先記下一句話，讓它成為作品的起點。</div>';
-        return;
-      }
-
-      els.entryList.innerHTML = list.map(entry => {
-        if (editingEntryId === entry.id) {
-          return `
-            <article class="entry">
-              <div class="entry-editor">
-                <label style="font-size:13px; color:var(--subtext); display:block; margin-bottom:4px;">標題</label>
-                <input id="editTitle-${entry.id}" type="text" value="${escapeHtml(entry.title)}" placeholder="標題" style="margin-bottom:10px;" />
-                
-                <label style="font-size:13px; color:var(--subtext); display:block; margin-bottom:4px;">類型</label>
-                <select id="editCategory-${entry.id}" style="margin-bottom:10px;">
-                  <option value="" ${entry.category === '' ? 'selected' : ''}></option>
-                  <option value="詩" ${entry.category === '詩' ? 'selected' : ''}>詩</option>
-                  <option value="散文" ${entry.category === '散文' ? 'selected' : ''}>散文</option>
-                  <option value="小說" ${entry.category === '小說' ? 'selected' : ''}>小說</option>
-                  <option value="夢境" ${entry.category === '夢境' ? 'selected' : ''}>夢境</option>
-                  <option value="想法" ${entry.category === '想法' ? 'selected' : ''}>想法</option>
-                  <option value="角色" ${entry.category === '角色' ? 'selected' : ''}>角色</option>
-                  <option value="生活觀察" ${entry.category === '生活觀察' ? 'selected' : ''}>生活觀察</option>
-                </select>
-
-                <label style="font-size:13px; color:var(--subtext); display:block; margin-bottom:4px;">內容</label>
-                <textarea id="editContent-${entry.id}" placeholder="內容" style="margin-bottom:10px; min-height:120px;">${escapeHtml(entry.content)}</textarea>
-                
-                <label style="font-size:13px; color:var(--subtext); display:block; margin-bottom:4px;">心情</label>
-                <input id="editMood-${entry.id}" type="text" value="${escapeHtml(entry.mood)}" placeholder="心情" style="margin-bottom:12px;" />
-                
-                <div class="toolbar" style="margin-top:0;">
-                  <button type="button" class="btn-primary" data-action="save-edit" data-id="${entry.id}">儲存修改</button>
-                  <button type="button" class="btn-light" data-action="cancel-edit" data-id="${entry.id}">取消</button>
-                </div>
-              </div>
-            </article>
-          `;
+      if (!list.length) { els.entryList.innerHTML = '<div class="empty">找不到符合條件的靈感。</div>'; return; }
+      els.entryList.innerHTML = list.map(e => {
+        if (editingEntryId === e.id) {
+          return `<article class="entry"><div class="entry-editor"><label>標題</label><input id="editTitle-${e.id}" type="text" value="${escapeHtml(e.title)}" /><label>類型</label><select id="editCategory-${e.id}"><option value="" ${e.category===''?'selected':''}></option><option value="詩">詩</option><option value="散文">散文</option><option value="小說">小說</option><option value="夢境">夢境</option><option value="想法">想法</option><option value="角色">角色</option><option value="生活觀察">生活觀察</option></select><label>內容</label><textarea id="editContent-${e.id}">${escapeHtml(e.content)}</textarea><label>心情</label><input id="editMood-${e.id}" type="text" value="${escapeHtml(e.mood)}" /><div class="toolbar"><button class="btn-primary" onclick="updateEntry('${e.id}')">儲存修改</button><button class="btn-light" onclick="cancelEntryEdit()">取消</button></div></div></article>`;
         }
-
-        return `
-          <article class="entry">
-            <div class="entry-head">
-              <div class="entry-title">${escapeHtml(entry.title)}</div>
-              <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-                ${entry.favorite ? '<div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>' : ''}
-                ${entry.category ? `<div class="badge">${escapeHtml(entry.category)}</div>` : ''}
-                ${entry.isArticle ? '<div class="badge" style="background:#e7f4ea; color:#4f7a59;">已成文章</div>' : ''}
-              </div>
-            </div>
-            <div class="entry-meta">
-              <div class="badge">${formatDateTime(entry.createdAt)}</div>
-              ${entry.mood ? `<div class="badge">心情：${escapeHtml(entry.mood)}</div>` : ''}
-            </div>
-            ${entry.content ? `<div class="entry-content">${escapeHtml(entry.content)}</div>` : ''}
-            ${entry.isArticle && entry.articleNote && editingArticleNoteId !== entry.id ? `<div class="article-note">文章備註：${linkify(escapeHtml(entry.articleNote))}</div>` : ''}
-            ${entry.isArticle && editingArticleNoteId === entry.id ? `
-              <div class="article-note-editor">
-                <input id="articleNoteInput-${entry.id}" type="text" value="${escapeHtml(entry.articleNote)}" placeholder="輸入這則靈感後來變成哪篇文章" />
-                <div class="toolbar" style="margin-top:0;">
-                  <button type="button" class="btn-primary" data-action="save-note" data-id="${entry.id}">儲存備註</button>
-                  <button type="button" class="btn-light" data-action="cancel-note" data-id="${entry.id}">取消</button>
-                </div>
-              </div>
-            ` : ''}
-            <div class="entry-footer">
-              <button type="button" class="btn-light" data-action="toggle-fav" data-id="${entry.id}">${entry.favorite ? '取消收藏' : '收藏'}</button>
-              <button type="button" class="btn-success" data-action="toggle-article" data-id="${entry.id}">${entry.isArticle ? '取消文章' : '標記成文章'}</button>
-              <button type="button" class="btn-light" data-action="edit-entry" data-id="${entry.id}">編輯</button>
-              ${entry.isArticle ? `<button type="button" class="btn-light" data-action="edit-note" data-id="${entry.id}">${entry.articleNote ? '修改文章備註' : '寫文章備註'}</button>` : ''}
-              <button type="button" class="btn-danger" data-action="delete-entry" data-id="${entry.id}">刪除</button>
-            </div>
-          </article>
-        `;
+        return `<article class="entry"><div class="entry-head"><div class="entry-title">${escapeHtml(e.title)}</div><div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">${e.favorite?'<div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>':''}${e.category?`<div class="badge">${escapeHtml(e.category)}</div>`:''}${e.isArticle?'<div class="badge" style="background:#e7f4ea; color:#4f7a59;">已成文章</div>':''}</div></div><div class="entry-meta"><div class="badge">${formatDateTime(e.createdAt)}</div>${e.mood?`<div class="badge">心情：${escapeHtml(e.mood)}</div>`:''}</div>${e.content?`<div class="entry-content">${escapeHtml(e.content)}</div>`:''}${e.isArticle && e.articleNote && editingArticleNoteId !== e.id ? `<div class="article-note">文章備註：${linkify(escapeHtml(e.articleNote))}</div>` : ''}${e.isArticle && editingArticleNoteId === e.id ? `<div class="article-note-editor"><input id="articleNoteInput-${e.id}" type="text" value="${escapeHtml(e.articleNote)}" /><div class="toolbar"><button class="btn-primary" onclick="saveArticleNote('${e.id}')">儲存備註</button><button class="btn-light" onclick="cancelArticleNoteEdit()">取消</button></div></div>` : ''}<div class="entry-footer"><button class="btn-light" onclick="toggleFavorite('${e.id}')">${e.favorite?'取消收藏':'收藏'}</button><button class="btn-success" onclick="toggleArticleStatus('${e.id}')">${e.isArticle?'取消文章':'標記成文章'}</button><button class="btn-light" onclick="startEntryEdit('${e.id}')">編輯</button>${e.isArticle?`<button class="btn-light" onclick="startArticleNoteEdit('${e.id}')">${e.articleNote?'修改文章備註':'寫文章備註'}</button>`:''}<button class="btn-danger" onclick="deleteEntry('${e.id}')">刪除</button></div></article>`;
       }).join('');
     }
 
     function renderSentences() {
-      const keyword = els.sentenceSearchInput.value.trim().toLowerCase();
-      const filtered = sentences.filter(item => item.text.toLowerCase().includes(keyword));
-
-      if (!filtered.length) {
-        els.sentenceList.innerHTML = keyword
-          ? '<div class="empty">找不到符合的句子。</div>'
-          : '<div class="empty">句子庫還是空的。<br>你可以先在上方輸入一句話，再加入句子庫。</div>';
-        return;
-      }
-
-      els.sentenceList.innerHTML = filtered.map(item => {
-        if (editingSentenceId === item.id) {
-          return `
-            <article class="entry" style="padding: 12px 16px;">
-              <textarea id="editSentenceText-${item.id}" class="sentence-textarea" placeholder="編輯句子" style="margin-bottom:10px;">${escapeHtml(item.text)}</textarea>
-              <div class="toolbar" style="margin-top:0; justify-content: flex-end;">
-                <button type="button" class="btn-primary" data-action="save-sentence-edit" data-id="${item.id}" style="padding: 8px 14px; font-size: 13px;">儲存</button>
-                <button type="button" class="btn-light" data-action="cancel-sentence-edit" data-id="${item.id}" style="padding: 8px 14px; font-size: 13px;">取消</button>
-              </div>
-            </article>
-          `;
+      const k = els.sentenceSearchInput.value.trim().toLowerCase(), f = sentences.filter(s => s.text.toLowerCase().includes(k));
+      if (!f.length) { els.sentenceList.innerHTML = '<div class="empty">找不到符合的句子。</div>'; return; }
+      els.sentenceList.innerHTML = f.map(s => {
+        if (editingSentenceId === s.id) {
+          return `<article class="entry" style="padding: 12px 16px;"><textarea id="editSentenceText-${s.id}" class="sentence-textarea">${escapeHtml(s.text)}</textarea><div class="toolbar" style="justify-content: flex-end;"><button class="btn-primary" onclick="updateSentence('${s.id}')">儲存</button><button class="btn-light" onclick="cancelSentenceEdit()">取消</button></div></article>`;
         }
-
-        return `
-          <article class="entry" style="padding: 12px 16px;">
-            <div class="entry-head" style="margin-bottom: 4px; justify-content: flex-end;">
-              <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-                ${item.favorite ? '<div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>' : ''}
-              </div>
-            </div>
-            <div class="entry-meta" style="margin-bottom: 6px;">
-              <div class="badge" style="font-size: 11px; padding: 4px 8px;">${formatDateTime(item.createdAt)}</div>
-            </div>
-            <div class="entry-content" style="margin-bottom: 10px; font-size: 14px;">${escapeHtml(item.text)}</div>
-            <div class="entry-footer" style="margin-top:0; justify-content: space-between; gap: 8px;">
-              <div style="display:flex; gap:8px;">
-                <button type="button" class="btn-light" data-action="toggle-sentence-fav" data-id="${item.id}" style="padding: 8px 14px; font-size: 13px;">${item.favorite ? '取消收藏' : '收藏'}</button>
-                <button type="button" class="btn-light" data-action="edit-sentence" data-id="${item.id}" style="padding: 8px 14px; font-size: 13px;">編輯</button>
-              </div>
-              <button type="button" class="btn-danger" data-action="delete-sentence" data-id="${item.id}" style="padding: 8px 14px; font-size: 13px;">刪除</button>
-            </div>
-          </article>
-        `;
+        return `<article class="entry" style="padding: 12px 16px;"><div class="entry-head" style="justify-content: flex-end;">${s.favorite?'<div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>':''}</div><div class="entry-meta" style="margin-bottom: 6px;"><div class="badge">${formatDateTime(s.createdAt)}</div></div><div class="entry-content" style="font-size: 14px;">${escapeHtml(s.text)}</div><div class="entry-footer" style="margin-top:0;"><div style="display:flex; gap:8px;"><button class="btn-light" onclick="toggleSentenceFavorite('${s.id}')">${s.favorite?'取消收藏':'收藏'}</button><button class="btn-light" onclick="startSentenceEdit('${s.id}')">編輯</button></div><button class="btn-danger" onclick="deleteSentence('${s.id}')">刪除</button></div></article>`;
       }).join('');
     }
 
     function renderStats() {
-      els.totalCount.textContent = String(entries.length);
-      const todayKey = getTodayKey();
-      els.todayCount.textContent = String(entries.filter(entry => entry.createdAt.startsWith(todayKey)).length);
-      els.sentenceCount.textContent = String(sentences.length);
-      const counts = entries.reduce((acc, entry) => {
-        if (entry.category) {
-          acc[entry.category] = (acc[entry.category] || 0) + 1;
-        }
-        return acc;
-      }, {});
-      const sortedCounts = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-      els.topCategory.textContent = sortedCounts.length ? sortedCounts[0][0] : '—';
+      els.totalCount.textContent = entries.length; els.todayCount.textContent = entries.filter(e => e.createdAt.startsWith(getTodayKey())).length; els.sentenceCount.textContent = sentences.length;
+      const c = entries.reduce((a, e) => { if (e.category) a[e.category] = (a[e.category] || 0) + 1; return a; }, {});
+      const sc = Object.entries(c).sort((a, b) => b[1] - a[1]); els.topCategory.textContent = sc.length ? sc[0][0] : '—';
     }
 
-    function renderAll() {
-      renderEntries();
-      renderFavorites();
-      renderArticles();
-      renderSentences();
-      renderStats();
-    }
+    function renderAll() { renderEntries(); renderFavorites(); renderArticles(); renderSentences(); renderStats(); }
 
-    function runSelfTests() {
-      const sampleSentence = normalizeSentence('測試句子');
-      console.assert(sampleSentence.text === '測試句子', 'string sentence should normalize to object');
-      console.assert(sampleSentence.favorite === false, 'new normalized sentence favorite should default false');
-      console.assert(typeof sampleSentence.createdAt === 'string' && sampleSentence.createdAt.length > 0, 'normalized sentence should include createdAt');
-      const sampleEntry = normalizeEntry({ title: '標題', content: '內容' });
-      console.assert(sampleEntry.title === '標題', 'entry title should be preserved');
-      console.assert(sampleEntry.favorite === false, 'entry favorite should default false');
-      const lines = '第一行\n第二行'.split(/\r?\n/);
-      console.assert(lines[0] === '第一行' && lines[1] === '第二行', 'newline splitting should work');
-      const cards = favoriteCardsMarkup();
-      console.assert(Array.isArray(cards), 'favoriteCardsMarkup should return an array');
-    }
+    els.saveBtn.onclick = saveEntry; els.clearBtn.onclick = clearForm; els.newPromptBtn.onclick = rotatePrompt; els.refreshReminderBtn.onclick = rotateReminder;
+    els.searchInput.oninput = renderEntries; els.filterCategory.onchange = renderEntries; els.sentenceSearchInput.oninput = renderSentences;
+    els.addSentenceBtn.onclick = addSentence; els.authorizeBtn.onclick = handleAuthClick; els.signoutBtn.onclick = handleSignoutClick; els.syncNowBtn.onclick = syncDataFromCloud;
+    els.toggleSettingsBtn.onclick = () => { els.settingsPanel.classList.toggle('active'); };
+    els.saveSettingsBtn.onclick = saveGoogleSettings; els.clearSettingsBtn.onclick = clearGoogleSettings;
+    els.exportBtn.onclick = exportData; els.importBtn.onclick = () => els.importInput.click(); els.importInput.onchange = importData;
 
-    els.saveBtn.addEventListener('click', saveEntry);
-    els.clearBtn.addEventListener('click', clearForm);
-    els.newPromptBtn.addEventListener('click', rotatePrompt);
-    els.refreshReminderBtn.addEventListener('click', rotateReminder);
-    els.searchInput.addEventListener('input', renderEntries);
-    els.filterCategory.addEventListener('change', renderEntries);
-    els.sentenceSearchInput.addEventListener('input', renderSentences);
-    els.addSentenceBtn.addEventListener('click', addSentence);
-    els.clearAllSentencesBtn.addEventListener('click', clearAllSentences);
-    els.clearAllEntriesBtn.addEventListener('click', clearAllEntries);
-    els.exportBtn.addEventListener('click', exportData);
-    els.importBtn.addEventListener('click', () => els.importInput.click());
-    els.importInput.addEventListener('change', importData);
-
-    // Google Sync Event Listeners
-    els.authorizeBtn.addEventListener('click', handleAuthClick);
-    els.signoutBtn.addEventListener('click', handleSignoutClick);
-    els.syncNowBtn.addEventListener('click', syncDataToCloud);
-    els.toggleSettingsBtn.addEventListener('click', () => {
-      els.settingsPanel.classList.toggle('active');
-    });
-    els.saveSettingsBtn.addEventListener('click', saveGoogleSettings);
-    els.clearSettingsBtn.addEventListener('click', clearGoogleSettings);
-
-    loadGoogleSettings();
-
-    els.sentenceList.addEventListener('click', (event) => {
-      const button = event.target.closest('button[data-action]');
-      if (!button) return;
-      const id = button.dataset.id;
-      const action = button.dataset.action;
-      if (!id || !action) return;
-      if (action === 'toggle-sentence-fav') {
-        toggleSentenceFavorite(id);
-      } else if (action === 'delete-sentence') {
-        if (confirm('確定要刪除這句句子嗎？')) {
-          deleteSentence(id);
-        }
-      } else if (action === 'edit-sentence') {
-        startSentenceEdit(id);
-      } else if (action === 'save-sentence-edit') {
-        updateSentence(id);
-      } else if (action === 'cancel-sentence-edit') {
-        cancelSentenceEdit();
-      }
-    });
-
-    els.entryList.addEventListener('click', (event) => {
-      const button = event.target.closest('button[data-action]');
-      if (!button) return;
-      const id = button.dataset.id;
-      const action = button.dataset.action;
-      if (!id || !action) return;
-      event.preventDefault();
-      event.stopPropagation();
-      if (action === 'delete-entry') {
-        const card = button.closest('.entry');
-        if (card) {
-          card.classList.add('fade-out');
-          setTimeout(() => deleteEntry(id), 200);
-        } else {
-          deleteEntry(id);
-        }
-      } else if (action === 'toggle-fav') {
-        toggleFavorite(id);
-      } else if (action === 'toggle-article') {
-        toggleArticleStatus(id);
-      } else if (action === 'edit-note') {
-        startArticleNoteEdit(id);
-      } else if (action === 'save-note') {
-        saveArticleNote(id);
-      } else if (action === 'cancel-note') {
-        cancelArticleNoteEdit();
-      } else if (action === 'edit-entry') {
-        startEntryEdit(id);
-      } else if (action === 'save-edit') {
-        updateEntry(id);
-      } else if (action === 'cancel-edit') {
-        cancelEntryEdit();
-      }
-    });
-
-    rotatePrompt();
-    currentPromptIndex = (currentPromptIndex - 1 + prompts.length) % prompts.length;
-    saveIndex(STORAGE_KEYS.promptIndex, currentPromptIndex);
-    rotateReminder();
-    currentReminderIndex = (currentReminderIndex - 1 + reminders.length) % reminders.length;
-    saveIndex(STORAGE_KEYS.reminderIndex, currentReminderIndex);
-    els.promptText.textContent = prompts[currentPromptIndex % prompts.length];
-    els.dailyReminder.textContent = reminders[currentReminderIndex % reminders.length];
-    runSelfTests();
-    renderAll();
+    loadGoogleSettings(); rotatePrompt(); rotateReminder(); renderAll();
   </script>
   <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
   <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
