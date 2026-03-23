@@ -928,6 +928,7 @@
         mood: typeof entry?.mood === 'string' ? entry.mood : '',
         isArticle: Boolean(entry?.isArticle),
         favorite: Boolean(entry?.favorite),
+        isDeleted: Boolean(entry?.isDeleted),
         articleNote: typeof entry?.articleNote === 'string' ? entry.articleNote : '',
         createdAt: typeof entry?.createdAt === 'string' ? entry.createdAt : now,
         updatedAt: typeof entry?.updatedAt === 'string' ? entry.updatedAt : (entry?.createdAt || now)
@@ -936,11 +937,12 @@
 
     function normalizeSentence(item) {
       const now = new Date().toISOString();
-      if (typeof item === 'string') return { id: makeId(), text: item, favorite: false, createdAt: now, updatedAt: now };
+      if (typeof item === 'string') return { id: makeId(), text: item, favorite: false, isDeleted: false, createdAt: now, updatedAt: now };
       return {
         id: typeof item?.id === 'string' ? item.id : makeId(),
         text: typeof item?.text === 'string' ? item.text : '',
         favorite: Boolean(item?.favorite),
+        isDeleted: Boolean(item?.isDeleted),
         createdAt: typeof item?.createdAt === 'string' ? item.createdAt : now,
         updatedAt: typeof item?.updatedAt === 'string' ? item.updatedAt : (item?.createdAt || now)
       };
@@ -989,7 +991,8 @@
                 favorite: v[6]?.formattedValue === 'TRUE',
                 articleNote: v[7]?.formattedValue || '',
                 createdAt: v[8]?.formattedValue || '',
-                updatedAt: v[9]?.formattedValue || v[8]?.formattedValue || ''
+                updatedAt: v[9]?.formattedValue || v[8]?.formattedValue || '',
+                isDeleted: v[10]?.formattedValue === 'TRUE'
               });
               if (ent.id) cloudEntries.push(ent);
             });
@@ -1013,7 +1016,8 @@
                 text: v[1]?.formattedValue || '',
                 favorite: v[2]?.formattedValue === 'TRUE',
                 createdAt: v[3]?.formattedValue || '',
-                updatedAt: v[4]?.formattedValue || v[3]?.formattedValue || ''
+                updatedAt: v[4]?.formattedValue || v[3]?.formattedValue || '',
+                isDeleted: v[5]?.formattedValue === 'TRUE'
               });
               if (sent.id) cloudSentences.push(sent);
             });
@@ -1037,8 +1041,8 @@
     }
 
     async function syncDataToCloudInternal() {
-      const entryRows = [['id', 'title', 'category', 'content', 'mood', 'isArticle', 'favorite', 'articleNote', 'createdAt', 'updatedAt'], ...entries.map(e => [e.id, e.title, e.category, e.content, e.mood, e.isArticle ? 'TRUE' : 'FALSE', e.favorite ? 'TRUE' : 'FALSE', e.articleNote, e.createdAt, e.updatedAt])];
-      const sentenceRows = [['id', 'text', 'favorite', 'createdAt', 'updatedAt'], ...sentences.map(s => [s.id, s.text, s.favorite ? 'TRUE' : 'FALSE', s.createdAt, s.updatedAt])];
+      const entryRows = [['id', 'title', 'category', 'content', 'mood', 'isArticle', 'favorite', 'articleNote', 'createdAt', 'updatedAt', 'isDeleted'], ...entries.map(e => [e.id, e.title, e.category, e.content, e.mood, e.isArticle ? 'TRUE' : 'FALSE', e.favorite ? 'TRUE' : 'FALSE', e.articleNote, e.createdAt, e.updatedAt, e.isDeleted ? 'TRUE' : 'FALSE'])];
+      const sentenceRows = [['id', 'text', 'favorite', 'createdAt', 'updatedAt', 'isDeleted'], ...sentences.map(s => [s.id, s.text, s.favorite ? 'TRUE' : 'FALSE', s.createdAt, s.updatedAt, s.isDeleted ? 'TRUE' : 'FALSE'])];
       await gapi.client.sheets.spreadsheets.values.update({ spreadsheetId: SPREADSHEET_ID, range: 'Entries!A1', valueInputOption: 'RAW', resource: { values: entryRows } });
       await gapi.client.sheets.spreadsheets.values.update({ spreadsheetId: SPREADSHEET_ID, range: 'Sentences!A1', valueInputOption: 'RAW', resource: { values: sentenceRows } });
     }
@@ -1061,7 +1065,9 @@
     }
 
     function exportData() {
-      const data = { entries, sentences, version: 'v1', exportedAt: new Date().toISOString() };
+      const activeEntries = entries.filter(e => !e.isDeleted);
+      const activeSentences = sentences.filter(s => !s.isDeleted);
+      const data = { entries: activeEntries, sentences: activeSentences, version: 'v1', exportedAt: new Date().toISOString() };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = `靈感簿備份_${getTodayKey()}.txt`;
@@ -1110,14 +1116,14 @@
       const lines = content ? content.split(/\r?\n/) : [];
       const firstLine = lines.length ? lines[0].slice(0, 18) : '';
       const now = new Date().toISOString();
-      const entry = normalizeEntry({ id: makeId(), title: title || firstLine || '一句靈感', category, content, mood, isArticle: false, favorite: false, articleNote: '', createdAt: now, updatedAt: now });
+      const entry = normalizeEntry({ id: makeId(), title: title || firstLine || '一句靈感', category, content, mood, isArticle: false, favorite: false, isDeleted: false, articleNote: '', createdAt: now, updatedAt: now });
       entries.unshift(entry); saveEntries(); renderAll(); clearForm();
     }
 
     function addSentence() {
       const v = els.sentenceOnlyInput.value.trim(); if (!v) return;
       const now = new Date().toISOString();
-      sentences.unshift(normalizeSentence({ id: makeId(), text: v, favorite: false, createdAt: now, updatedAt: now }));
+      sentences.unshift(normalizeSentence({ id: makeId(), text: v, favorite: false, isDeleted: false, createdAt: now, updatedAt: now }));
       saveSentences(); els.sentenceOnlyInput.value = ''; renderAll();
     }
 
@@ -1155,16 +1161,32 @@
       saveSentences(); editingSentenceId = null; renderAll(); setStatus('句子已更新。');
     }
     
-    function deleteEntry(id) { entries = entries.filter(e => e.id !== id); if (editingArticleNoteId === id) editingArticleNoteId = null; saveEntries(); renderAll(); }
-    function deleteSentence(id) { sentences = sentences.filter(s => s.id !== id); saveSentences(); renderAll(); }
+    function deleteEntry(id) { 
+      if (!confirm('確定要刪除這則靈感嗎？')) return;
+      const now = new Date().toISOString();
+      entries = entries.map(e => e.id === id ? { ...e, isDeleted: true, updatedAt: now } : e);
+      if (editingArticleNoteId === id) editingArticleNoteId = null; 
+      saveEntries(); renderAll(); 
+    }
+    function deleteSentence(id) { 
+      if (!confirm('確定要刪除這則句子嗎？')) return;
+      const now = new Date().toISOString();
+      sentences = sentences.map(s => s.id === id ? { ...s, isDeleted: true, updatedAt: now } : s);
+      saveSentences(); renderAll(); 
+    }
     
     function filteredEntries() { 
       const k = els.searchInput.value.trim().toLowerCase(), c = els.filterCategory.value; 
-      return entries.filter(e => { const mc = c === '全部' || e.category === c; const blob = [e.title, e.content, e.mood, e.category, e.articleNote].join(' ').toLowerCase(); return mc && (!k || blob.includes(k)); }); 
+      return entries.filter(e => { 
+        if (e.isDeleted) return false;
+        const mc = c === '全部' || e.category === c; 
+        const blob = [e.title, e.content, e.mood, e.category, e.articleNote].join(' ').toLowerCase(); 
+        return mc && (!k || blob.includes(k)); 
+      }); 
     }
 
     function renderFavorites() {
-      const fe = entries.filter(e => e.favorite), fs = sentences.filter(s => s.favorite);
+      const fe = entries.filter(e => e.favorite && !e.isDeleted), fs = sentences.filter(s => s.favorite && !s.isDeleted);
       let html = '';
       fs.forEach(s => html += `<article class="entry" style="padding: 12px 16px;"><div class="entry-head" style="margin-bottom:8px;"><div class="badge">${formatDateTime(s.createdAt)}</div><div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div></div><div class="entry-content">${escapeHtml(s.text)}</div></article>`);
       fe.forEach(e => html += `<article class="entry"><div class="entry-head"><div class="entry-title">${escapeHtml(e.title)}</div><div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;"><div class="badge">${formatDateTime(e.createdAt)}</div><div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>${e.category?`<div class="badge">${escapeHtml(e.category)}</div>`:''}${e.isArticle?'<div class="badge" style="background:#e7f4ea; color:#4f7a59;">已成文章</div>':''}</div></div><div class="entry-meta">${e.mood?`<div class="badge">心情：${escapeHtml(e.mood)}</div>`:''}</div>${e.content?`<div class="entry-content">${escapeHtml(e.content)}</div>`:''}</article>`);
@@ -1172,7 +1194,7 @@
     }
 
     function renderArticles() {
-      const a = entries.filter(e => e.isArticle);
+      const a = entries.filter(e => e.isArticle && !e.isDeleted);
       els.articleList.innerHTML = a.length ? a.map(e => `<article class="entry"><div class="entry-head"><div class="entry-title">${escapeHtml(e.title)}</div><div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">${e.favorite?'<div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>':''}${e.category?`<div class="badge">${escapeHtml(e.category)}</div>`:''}<div class="badge" style="background:#e7f4ea;color:#4f7a59;">文章</div></div></div><div class="entry-meta"><div class="badge">${formatDateTime(e.createdAt)}</div>${e.mood?`<div class="badge">心情：${escapeHtml(e.mood)}</div>`:''}</div>${e.content?`<div class="entry-content">${escapeHtml(e.content)}</div>`:''}${e.articleNote?`<div class="article-note">${linkify(escapeHtml(e.articleNote))}</div>`:''}</article>`).join('') : '<div class="empty">目前還沒有文章。</div>';
     }
 
@@ -1188,7 +1210,7 @@
     }
 
     function renderSentences() {
-      const k = els.sentenceSearchInput.value.trim().toLowerCase(), f = sentences.filter(s => s.text.toLowerCase().includes(k));
+      const k = els.sentenceSearchInput.value.trim().toLowerCase(), f = sentences.filter(s => !s.isDeleted && s.text.toLowerCase().includes(k));
       if (!f.length) { els.sentenceList.innerHTML = '<div class="empty">找不到符合的句子。</div>'; return; }
       els.sentenceList.innerHTML = f.map(s => {
         if (editingSentenceId === s.id) {
@@ -1199,8 +1221,12 @@
     }
 
     function renderStats() {
-      els.totalCount.textContent = entries.length; els.todayCount.textContent = entries.filter(e => e.createdAt.startsWith(getTodayKey())).length; els.sentenceCount.textContent = sentences.length;
-      const c = entries.reduce((a, e) => { if (e.category) a[e.category] = (a[e.category] || 0) + 1; return a; }, {});
+      const activeEntries = entries.filter(e => !e.isDeleted);
+      const activeSentences = sentences.filter(s => !s.isDeleted);
+      els.totalCount.textContent = activeEntries.length; 
+      els.todayCount.textContent = activeEntries.filter(e => e.createdAt.startsWith(getTodayKey())).length; 
+      els.sentenceCount.textContent = activeSentences.length;
+      const c = activeEntries.reduce((a, e) => { if (e.category) a[e.category] = (a[e.category] || 0) + 1; return a; }, {});
       const sc = Object.entries(c).sort((a, b) => b[1] - a[1]); els.topCategory.textContent = sc.length ? sc[0][0] : '—';
     }
 
