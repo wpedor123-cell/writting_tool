@@ -244,7 +244,7 @@
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 12px;
     }
 
@@ -659,6 +659,10 @@
               <div class="value" id="sentenceCount">0</div>
             </div>
             <div class="stat">
+              <div class="label">靈感完成數</div>
+              <div class="value" id="completedCount">0</div>
+            </div>
+            <div class="stat">
               <div class="label">最常類型</div>
               <div class="value" id="topCategory">—</div>
             </div>
@@ -719,7 +723,7 @@
       </div>
     </div>
 
-    <div class="footer-note">靈感不必完整，只要先把它留下來就好。</div>
+    <div class="footer-note">靈感不必完整，只要先把它留下來就好。v023</div>
   </div>
 
   <script>
@@ -745,7 +749,7 @@
     let gapiLoadedCalled = false;
     let gisLoadedCalled = false;
 
-    const prompts = ['描寫一個日常中被忽略的小動作，並讓它帶出一種情緒。','寫下一個你今天觀察到的細節，然後問自己：它為什麼讓我記住？','用三句話寫一個沒有說出口的想念。','把一場夢中的畫面寫下來，不需要解釋，只保留氣氛。','描寫一個人表面平靜，但其實心裡有波動的瞬間。','從一句對白開始，讓一個故事慢慢出現。','寫一個「原來如此」的時刻，讓它像頓悟一樣落下。','記錄今天最安靜的一刻，試著讓讀者也站進那個畫面。','把一種身體感受寫成文字，例如鼻酸、手心冒汗、腿很酸。','寫一個你以為不重要，回頭看卻很有意義的小事。','描寫一個你想靠近卻不敢太靠近的人，不要直接說喜歡。','選一個物件當主角，讓它替人保管秘密。'];
+    const prompts = ['描寫一個日常中被忽略的小動作，並讓它帶出一種情緒。','寫下一個你今天觀察到的細節，然後問自己：它為什麼讓我記住？','用三句話寫一個沒有說出口的想念。','把一場夢中的畫面寫下來，不需要解釋，只保留氣氛。','描寫一個一個人表面平靜，但其實心裡有波動的瞬間。','從一句對白開始，讓一個故事慢慢出現。','寫一個「原來如此」的時刻，讓它像頓悟一樣落下。','記錄今天最安靜的一刻，試著讓讀者也站進那個畫面。','把一種身體感受寫成文字，例如鼻酸、手心冒汗、腿很酸。','寫一個你以為不重要，回頭看卻很有意義的小事。','描寫一個你想靠近卻不敢太靠近的人，不要直接說喜歡。','選一個物件當主角，讓它替人保管秘密。'];
     const reminders = ['有些作品不是想很久才誕生，而是先寫下一句，世界才慢慢長出來。','今天不用逼自己寫得完整，只要誠實記下一個瞬間就夠了。','靈感很輕，先接住它，之後再慢慢雕刻。','你記下的不是零碎，而是未來作品的種子。','有時候，一句話就是整篇作品最早的心跳。','不用急著證明自己會寫，要先相信自己有感受。','創作不是每次都要盛大，有時只是一個安靜的發現。','當你願意看見細節，故事就會自己靠近你。','不要急著判斷好不好，先把它寫下來再說。','很多作品其實只是從一個小觀察開始。','你今天注意到的細節，也許就是一篇作品的開頭。','一句簡單的記錄，可能會在未來長成一段故事。','創作有時不是想出來，而是慢慢發現的。','有感覺的地方通常藏著一個故事。','當一句話讓你停下來，它就值得被記住。','靈感通常很小聲，所以要先把它寫下來。','有很多好的作品，其實只是誠實的觀察。','有些畫面當下很普通，但寫下來就不一樣了。','創作不是每天都有高潮，但每天都可以留下痕跡。','先寫下來，再慢慢理解它的意義。','有些想法當下很模糊，但未來會變清楚。','不需要等到完美的句子，只要先記住那不完整的一句。','當你願意停下來觀察，靈感就會出現。','有時候最好的素材，其實就已經在日常裡了。','創作不一定要宏大，一個瞬間就夠了。','你看到的世界，和別人其實不一樣。','很多故事都藏在很小的細節裡。','有些句子只是提醒你：這裡有東西值得寫。','好好傾聽自己內心的聲音。','好好保護自己內在的感性。','先留下線索，未來再把故事補上。'];
 
     const els = {
@@ -764,6 +768,7 @@
       totalCount: document.getElementById('totalCount'),
       todayCount: document.getElementById('todayCount'),
       sentenceCount: document.getElementById('sentenceCount'),
+      completedCount: document.getElementById('completedCount'),
       topCategory: document.getElementById('topCategory'),
       promptText: document.getElementById('promptText'),
       newPromptBtn: document.getElementById('newPromptBtn'),
@@ -1189,7 +1194,7 @@
       const fe = entries.filter(e => e.favorite && !e.isDeleted), fs = sentences.filter(s => s.favorite && !s.isDeleted);
       let html = '';
       fs.forEach(s => html += `<article class="entry" style="padding: 12px 16px;"><div class="entry-head" style="margin-bottom:8px;"><div class="badge">${formatDateTime(s.createdAt)}</div><div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div></div><div class="entry-content">${escapeHtml(s.text)}</div></article>`);
-      fe.forEach(e => html += `<article class="entry"><div class="entry-head"><div class="entry-title">${escapeHtml(e.title)}</div><div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;"><div class="badge">${formatDateTime(e.createdAt)}</div><div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>${e.category?`<div class="badge">${escapeHtml(e.category)}</div>`:''}${e.isArticle?'<div class="badge" style="background:#e7f4ea; color:#4f7a59;">已成文章</div>':''}</div></div><div class="entry-meta">${e.mood?`<div class="badge">心情：${escapeHtml(e.mood)}</div>`:''}</div>${e.content?`<div class="entry-content">${escapeHtml(e.content)}</div>`:''}</article>`);
+      fe.forEach(e => html += `<article class="entry"><div class="entry-head"><div class="entry-title">${escapeHtml(e.title)}</div><div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;"><div class="badge" style="background:#fff3c4;color:#8a6d00;">★ 收藏</div>${e.category?`<div class="badge">${escapeHtml(e.category)}</div>`:''}${e.isArticle?'<div class="badge" style="background:#e7f4ea; color:#4f7a59;">已成文章</div>':''}</div></div><div class="entry-meta"><div class="badge">${formatDateTime(e.createdAt)}</div>${e.mood?`<div class="badge">心情：${escapeHtml(e.mood)}</div>`:''}</div>${e.content?`<div class="entry-content">${escapeHtml(e.content)}</div>`:''}</article>`);
       els.favoriteList.innerHTML = html || '<div class="empty">目前還沒有收藏。</div>';
     }
 
@@ -1225,6 +1230,7 @@
       const activeSentences = sentences.filter(s => !s.isDeleted);
       els.totalCount.textContent = activeEntries.length; 
       els.todayCount.textContent = activeEntries.filter(e => e.createdAt.startsWith(getTodayKey())).length; 
+      els.completedCount.textContent = activeEntries.filter(e => e.isArticle).length;
       els.sentenceCount.textContent = activeSentences.length;
       const c = activeEntries.reduce((a, e) => { if (e.category) a[e.category] = (a[e.category] || 0) + 1; return a; }, {});
       const sc = Object.entries(c).sort((a, b) => b[1] - a[1]); els.topCategory.textContent = sc.length ? sc[0][0] : '—';
